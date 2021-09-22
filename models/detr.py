@@ -64,7 +64,18 @@ class DETR(nn.Module):
         assert mask is not None
         hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0]
 
+        # sbj_clas = nn.Linear(hs)
+        # obj_clas = nn.Linear(hs)
+        # pred_clas = nn.Linear(hs)
+
+        # sbj_bbox = self.bbox_embed(hs)
+        # obj_bbox = self.bbox_embed(hs)
+        # pred_bbox = self.bbox_embed(hs)
+
+    
         outputs_class = self.class_embed(hs)
+        print("###")
+        print(outputs_class.shape)
         outputs_coord = self.bbox_embed(hs).sigmoid()
         out = {'pred_logits': outputs_class[-1], 'pred_boxes': outputs_coord[-1]}
         if self.aux_loss:
@@ -117,7 +128,11 @@ class SetCriterion(nn.Module):
         target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                     dtype=torch.int64, device=src_logits.device)
         target_classes[idx] = target_classes_o
+        print(target_classes)
 
+        print("TARGET")
+        print(target_classes.shape)
+        print(src_logits.transpose(1, 2).shape)
         loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight)
         losses = {'loss_ce': loss_ce}
 

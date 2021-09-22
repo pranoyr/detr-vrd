@@ -67,11 +67,26 @@ class HungarianMatcher(nn.Module):
         # The 1 is a constant that doesn't change the matching, it can be ommitted.
         cost_class = -out_prob[:, tgt_ids]
 
+        # cost_class_sbj = 
+        # cost_class_pred =        
+        # cost_class_obj =
+        # cost_class = cost_class_sbj + cost_class_pred + cost_class_obj
+
         # Compute the L1 cost between boxes
         cost_bbox = torch.cdist(out_bbox, tgt_bbox, p=1)
 
-        # Compute the giou cost betwen boxes
+        # cost_bbox_sbj = 
+        # cost_bbox_pred =
+        # cost_bbox_obj =
+        # cost_bbox = cost_bbox_sbj + cost_bbox_pred + cost_bbox_obj
+
+        # Compute the giou cost betwen boxes    
         cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(out_bbox), box_cxcywh_to_xyxy(tgt_bbox))
+
+        # cost_giou_sbj =
+        # cost_giou_pred =
+        # cost_giou_obj =
+        # cost_giou = cost_giou_sbj + cost_giou_pred + cost_giou_obj
 
         # Final cost matrix
         C = self.cost_bbox * cost_bbox + self.cost_class * cost_class + self.cost_giou * cost_giou

@@ -16,7 +16,7 @@ from torch import nn, Tensor
 
 
 class Transformer(nn.Module):
-
+    
     def __init__(self, d_model=512, nhead=8, num_encoder_layers=6,
                  num_decoder_layers=6, dim_feedforward=2048, dropout=0.1,
                  activation="relu", normalize_before=False,
@@ -45,17 +45,20 @@ class Transformer(nn.Module):
                 nn.init.xavier_uniform_(p)
 
     def forward(self, src, mask, query_embed, pos_embed):
-        # flatten NxCxHxW to HWxNxC
+        # flatten NxCxHxW to HWxNxC  torch.Size([2, 256, 7, 7]) --> torch.Size([49, 2, 256])
         bs, c, h, w = src.shape
         src = src.flatten(2).permute(2, 0, 1)
+        print("src.shape:", src.shape)
         pos_embed = pos_embed.flatten(2).permute(2, 0, 1)
         query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
         mask = mask.flatten(1)
 
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
+        print("memory.shape:", memory.shape)
         hs = self.decoder(tgt, memory, memory_key_padding_mask=mask,
                           pos=pos_embed, query_pos=query_embed)
+        print("hs.shape:",hs.shape)
         return hs.transpose(1, 2), memory.permute(1, 2, 0).view(bs, c, h, w)
 
 
@@ -151,10 +154,11 @@ class TransformerEncoderLayer(nn.Module):
                      src_mask: Optional[Tensor] = None,
                      src_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None):
+        # k,q,v ---> torch.Size([49, 2, 256])
         q = k = self.with_pos_embed(src, pos)
         src2 = self.self_attn(q, k, value=src, attn_mask=src_mask,
                               key_padding_mask=src_key_padding_mask)[0]
-        src = src + self.dropout1(src2)
+        src = src + self.dropout1(src2)  
         src = self.norm1(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         src = src + self.dropout2(src2)
@@ -216,7 +220,7 @@ class TransformerDecoderLayer(nn.Module):
                      memory_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
-        q = k = self.with_pos_embed(tgt, query_pos)
+        q = k = self.with_pos_embed(tgt, query_pos) # k,q,v --> torch.Size([100, 2, 256])
         tgt2 = self.self_attn(q, k, value=tgt, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
         tgt = tgt + self.dropout1(tgt2)
