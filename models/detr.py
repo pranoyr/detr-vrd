@@ -134,7 +134,7 @@ class SetCriterion(nn.Module):
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]
         """
         # assert 'pred_logits' in outputs
-        src_logits = outputs['sbj_logits']
+        src_logits = outputs['obj_logits']
 
         idx = self._get_src_permutation_idx(indices)
         total_loss_ce = []
