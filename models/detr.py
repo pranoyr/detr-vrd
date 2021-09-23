@@ -125,7 +125,9 @@ class SetCriterion(nn.Module):
         empty_weight = torch.ones(self.num_classes + 1)
         empty_weight_pred = torch.ones(self.num_prd_classes + 1)
         empty_weight[-1] = self.eos_coef
+        empty_weight_pred[-1] = self.eos_coef
         self.register_buffer('empty_weight', empty_weight)
+        self.register_buffer('empty_weight_pred', empty_weight_pred)
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (NLL)
@@ -141,7 +143,12 @@ class SetCriterion(nn.Module):
             target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                     dtype=torch.int64, device=src_logits.device)
             target_classes[idx] = target_classes_o
-            loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight)
+            if i=="prd":
+                target_classes = torch.full(src_logits.shape[:2], self.num_prd_classes,
+                                    dtype=torch.int64, device=src_logits.device)
+                loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight_pred)
+            else:
+                loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight)
             total_loss_ce.append(loss_ce)
 
         total_loss_ce = sum(total_loss_ce)
