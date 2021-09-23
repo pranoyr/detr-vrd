@@ -1,10 +1,10 @@
 import torch
 
 def _get_src_permutation_idx(indices):
-        # permute predictions following indices
-        batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
-        src_idx = torch.cat([src for (src, _) in indices])
-        return batch_idx, src_idx
+	# permute predictions following indices
+	batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
+	src_idx = torch.cat([src for (src, _) in indices])
+	return batch_idx, src_idx
 
 
 
@@ -43,3 +43,7 @@ def _get_src_permutation_idx(indices):
 #     'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
 #     'toothbrush'
 # ]
+target = {"boxes":[1,2,34]}
+if "boxes" in target:	
+	print("yes")
+

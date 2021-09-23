@@ -23,35 +23,35 @@ def crop(image, target, region):
     target["size"] = torch.tensor([h, w])
 
     fields = ["labels", "area", "iscrowd"]
+    for k, _ in target.items():
+        if "boxes" in k:
+            boxes = target[k]
+            max_size = torch.as_tensor([w, h], dtype=torch.float32)
+            cropped_boxes = boxes - torch.as_tensor([j, i, j, i])
+            cropped_boxes = torch.min(cropped_boxes.reshape(-1, 2, 2), max_size)
+            cropped_boxes = cropped_boxes.clamp(min=0)
+            area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
+            target[k] = cropped_boxes.reshape(-1, 4)
+            target["area"] = area
+            fields.append(k)
 
-    if "boxes" in target:
-        boxes = target["boxes"]
-        max_size = torch.as_tensor([w, h], dtype=torch.float32)
-        cropped_boxes = boxes - torch.as_tensor([j, i, j, i])
-        cropped_boxes = torch.min(cropped_boxes.reshape(-1, 2, 2), max_size)
-        cropped_boxes = cropped_boxes.clamp(min=0)
-        area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
-        target["boxes"] = cropped_boxes.reshape(-1, 4)
-        target["area"] = area
-        fields.append("boxes")
+        # if "masks" in target:
+        #     # FIXME should we update the area here if there are no boxes?
+        #     target['masks'] = target['masks'][:, i:i + h, j:j + w]
+        #     fields.append("masks")
 
-    if "masks" in target:
-        # FIXME should we update the area here if there are no boxes?
-        target['masks'] = target['masks'][:, i:i + h, j:j + w]
-        fields.append("masks")
+        # remove elements for which the boxes or masks that have zero area
+        if "boxes" in k or "masks" in target:
+            # favor boxes selection when defining which elements to keep
+            # this is compatible with previous implementation
+            if "boxes" in k:
+                cropped_boxes = target[k].reshape(-1, 2, 2)
+                keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
+            else:
+                keep = target['masks'].flatten(1).any(1)
 
-    # remove elements for which the boxes or masks that have zero area
-    if "boxes" in target or "masks" in target:
-        # favor boxes selection when defining which elements to keep
-        # this is compatible with previous implementation
-        if "boxes" in target:
-            cropped_boxes = target['boxes'].reshape(-1, 2, 2)
-            keep = torch.all(cropped_boxes[:, 1, :] > cropped_boxes[:, 0, :], dim=1)
-        else:
-            keep = target['masks'].flatten(1).any(1)
-
-        for field in fields:
-            target[field] = target[field][keep]
+            for field in fields:
+                target[field] = target[field][keep]
 
     return cropped_image, target
 
@@ -112,22 +112,23 @@ def resize(image, target, size, max_size=None):
     ratio_width, ratio_height = ratios
 
     target = target.copy()
-    if "boxes" in target:
-        boxes = target["boxes"]
-        scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
-        target["boxes"] = scaled_boxes
+    for k, _ in target.items():
+        if "boxes" in target:
+            boxes = target[k]
+            scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
+            target[k] = scaled_boxes
 
-    if "area" in target:
-        area = target["area"]
-        scaled_area = area * (ratio_width * ratio_height)
-        target["area"] = scaled_area
+        if "area" in target:
+            area = target["area"]
+            scaled_area = area * (ratio_width * ratio_height)
+            target["area"] = scaled_area
 
-    h, w = size
-    target["size"] = torch.tensor([h, w])
+        h, w = size
+        target["size"] = torch.tensor([h, w])
 
-    if "masks" in target:
-        target['masks'] = interpolate(
-            target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
+        if "masks" in target:
+            target['masks'] = interpolate(
+                target['masks'][:, None].float(), size, mode="nearest")[:, 0] > 0.5
 
     return rescaled_image, target
 
@@ -250,11 +251,12 @@ class Normalize(object):
             return image, None
         target = target.copy()
         h, w = image.shape[-2:]
-        if "boxes" in target:
-            boxes = target["boxes"]
-            boxes = box_xyxy_to_cxcywh(boxes)
-            boxes = boxes / torch.tensor([w, h, w, h], dtype=torch.float32)
-            target["boxes"] = boxes
+        for k, _ in target.items():
+            if "boxes" in k:
+                boxes = target[k]
+                boxes = box_xyxy_to_cxcywh(boxes)
+                boxes = boxes / torch.tensor([w, h, w, h], dtype=torch.float32)
+                target[k] = boxes
         return image, target
 
 

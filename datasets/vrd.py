@@ -94,7 +94,7 @@ class VRDDataset(Dataset):
 	def __len__(self):
 		return len(self.imgs_list)
 
-	def image_path_from_index(self, img_name):
+	def load_img(self, img_name):
 		"""
 		Construct an image path from the image's "index" identifier.
 		"""
@@ -102,9 +102,10 @@ class VRDDataset(Dataset):
 								  img_name)
 		assert os.path.exists(image_path), \
 			'Path does not exist: {}'.format(image_path)
-		return image_path
+		img = Image.open(image_path).convert('RGB')
+		return img
 
-	def load_pascal_annotation(self, index):
+	def load_annotation(self, index):
 		"""
 		Load image and bounding boxes info from XML file in the PASCAL VOC
 		format.
@@ -124,7 +125,10 @@ class VRDDataset(Dataset):
 			# prepare bboxes for subject and object
 			gt_sbj_bbox = y1y2x1x2_to_x1y1x2y2(gt_sbj_bbox)
 			gt_obj_bbox = y1y2x1x2_to_x1y1x2y2(gt_obj_bbox)
-			boxes.append([gt_sbj_bbox, boxes_union(gt_sbj_bbox, gt_obj_bbox), gt_obj_bbox])
+
+			sbj_boxes = gt_sbj_bbox
+			prd_boxes = boxes_union(gt_sbj_bbox, gt_obj_bbox)
+			obj_boxes = gt_obj_bbox
 
 			# prepare labels for subject and object
 			# map to word
@@ -132,33 +136,22 @@ class VRDDataset(Dataset):
 			gt_obj_label = self.all_objects[gt_obj_label]
 			predicate = self.predicates[predicate]
 			# map to new index
-			labels.append([self._class_to_ind[gt_sbj_label],     
-						   self._preds_to_ind[predicate], 				# Subject, Predicate, Object
-						   self._class_to_ind[gt_obj_label]])
-		return boxes, labels, preds
+			sbj_labels = self._class_to_ind[gt_sbj_label]  
+			prd_labels = self._preds_to_ind[predicate] 			
+			obj_labels = self._class_to_ind[gt_obj_label]
+
+		return sbj_boxes, prd_boxes, obj_boxes, sbj_labels, prd_labels, obj_labels
 
 	def __getitem__(self, index):
 		img_name = self.imgs_list[index]
-		boxes, labels, preds = self.load_pascal_annotation(img_name)
-		img_path = self.image_path_from_index(img_name)
-		img = Image.open(img_path)
-		img = self.transform(img).type(torch.float)
 
-	
-		assert len(boxes) == len(
-			labels), "boxes and labels should be of equal length"
+		sbj_boxes, prd_boxes, obj_boxes, sbj_labels, prd_labels, obj_label = self.load_annotation(img_name)
+		
 
-		# return {'boxes': torch.tensor(boxes, dtype=torch.float32),
-		# 		'labels': torch.tensor(labels, dtype=torch.int64),
-		# 		'preds': torch.tensor(preds, dtype=torch.int64),
-		# 		'img': img
-		# 		}
+		img = self.load_img(img_name)
+		img, targets = self.transform(img, targets)
 
-		return {'boxes': torch.tensor(boxes, dtype=torch.float32),
-				'labels': torch.tensor(labels, dtype=torch.int64),
-				'preds': torch.tensor(preds, dtype=torch.int64),
-				'img': img
-				}
+		return img, targets   # img: 3xHxW, targets: dict
 
 
 def collater(data):
@@ -166,6 +159,4 @@ def collater(data):
 	annotations = [{"boxes": s['boxes'].to(cfg.DEVICE)} for s in data]
 	for i, s in enumerate(data):
 		annotations[i]['labels'] = s['labels'].to(cfg.DEVICE)
-	for i, s in enumerate(data):
-    		annotations[i]['preds'] = s['preds'].to(cfg.DEVICE)
 	return imgs, annotations
