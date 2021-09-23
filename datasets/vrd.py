@@ -9,6 +9,7 @@ import torch
 from torchvision.transforms.transforms import GaussianBlur
 from config import cfg
 from util.box_ops import boxes_union
+from pathlib import Path
 from PIL import Image
 from shapely.geometry import box
 from shapely.ops import cascaded_union
@@ -110,10 +111,12 @@ class VRDDataset(Dataset):
 		Load image and bounding boxes info from XML file in the PASCAL VOC
 		format.
 		"""
-		boxes = []
-		labels = []
-		preds = []
-		# preds = []
+		sbj_boxes = []
+		obj_boxes = []
+		prd_boxes = []
+		sbj_labels = []
+		obj_labels = []
+		prd_labels = []
 		annotation = self.annotations[index]
 		for spo in annotation:
 			gt_sbj_label = spo['subject']['category']
@@ -125,10 +128,7 @@ class VRDDataset(Dataset):
 			# prepare bboxes for subject and object
 			gt_sbj_bbox = y1y2x1x2_to_x1y1x2y2(gt_sbj_bbox)
 			gt_obj_bbox = y1y2x1x2_to_x1y1x2y2(gt_obj_bbox)
-
-			sbj_boxes = gt_sbj_bbox
-			prd_boxes = boxes_union(gt_sbj_bbox, gt_obj_bbox)
-			obj_boxes = gt_obj_bbox
+			gt_pred_bbox = boxes_union(gt_sbj_bbox, gt_obj_bbox)
 
 			# prepare labels for subject and object
 			# map to word
@@ -136,27 +136,41 @@ class VRDDataset(Dataset):
 			gt_obj_label = self.all_objects[gt_obj_label]
 			predicate = self.predicates[predicate]
 			# map to new index
-			sbj_labels = self._class_to_ind[gt_sbj_label]  
-			prd_labels = self._preds_to_ind[predicate] 			
-			obj_labels = self._class_to_ind[gt_obj_label]
+			gt_sbj_label = self._class_to_ind[gt_sbj_label]  
+			gt_obj_label = self._preds_to_ind[predicate] 			
+			predicate = self._class_to_ind[gt_obj_label]
 
-		return sbj_boxes, prd_boxes, obj_boxes, sbj_labels, prd_labels, obj_labels
+			# append to list
+			sbj_boxes.append(gt_sbj_bbox)
+			obj_boxes.append(gt_obj_bbox)
+			prd_boxes.append(gt_pred_bbox)
+			sbj_labels.append(gt_sbj_label)
+			obj_labels.append(gt_obj_label)
+			prd_labels.append(predicate)
+
+		sbj_boxes = torch.stack(sbj_boxes).type(torch.FloatTensor)
+		obj_boxes = torch.stack(obj_boxes).type(torch.FloatTensor)
+		prd_boxes = torch.stack(prd_boxes).type(torch.FloatTensor)
+		sbj_labels = torch.stack(sbj_labels).type(torch.LongTensor)
+		obj_labels = torch.stack(obj_labels).type(torch.LongTensor)
+		prd_labels = torch.stack(prd_labels).type(torch.LongTensor)
+
+		targets = {"sbj_boxes": sbj_boxes, "prd_boxes": prd_boxes, "obj_boxes": obj_boxes, \
+		"sbj_labels": sbj_labels, "prd_labels": prd_labels, "obj_labels": obj_labels}
+
+		return targets
 
 	def __getitem__(self, index):
 		img_name = self.imgs_list[index]
-
-		sbj_boxes, prd_boxes, obj_boxes, sbj_labels, prd_labels, obj_label = self.load_annotation(img_name)
-		
-
 		img = self.load_img(img_name)
+		targets = self.load_annotation(img_name)
 		img, targets = self.transform(img, targets)
-
 		return img, targets   # img: 3xHxW, targets: dict
 
 
-def collater(data):
-	imgs = [s['img'] for s in data]
-	annotations = [{"boxes": s['boxes'].to(cfg.DEVICE)} for s in data]
-	for i, s in enumerate(data):
-		annotations[i]['labels'] = s['labels'].to(cfg.DEVICE)
-	return imgs, annotations
+def build(image_set, args):
+    root = Path(args.vrd_path)
+    assert root.exists(), f'provided VRD path {root} does not exist'
+  
+    dataset = VRDDataset(root, image_set)
+    return dataset

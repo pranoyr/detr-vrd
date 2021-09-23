@@ -43,6 +43,10 @@ def _get_src_permutation_idx(indices):
 #     'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
 #     'toothbrush'
 # ]
+
+l = [torch.tensor(0.4), torch.tensor(0.3), torch.tensor(0.2), torch.tensor(0.1)]
+print(sum(l))
+
 target = {"boxes":[1,2,34]}
 if "boxes" in target:	
 	print("yes")

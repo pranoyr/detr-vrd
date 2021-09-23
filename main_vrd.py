@@ -79,9 +79,9 @@ def get_args_parser():
                         help="Relative classification weight of the no-object class")
 
     # dataset parameters
-    parser.add_argument('--dataset_file', default='coco')
-    parser.add_argument('--coco_path', type=str)
-    parser.add_argument('--coco_panoptic_path', type=str)
+    parser.add_argument('--dataset_file', default='vrd')
+    parser.add_argument('--vrd_path', type=str)
+    # parser.add_argument('--coco_panoptic_path', type=str)
     parser.add_argument('--remove_difficult', action='store_true')
 
     parser.add_argument('--output_dir', default='',
@@ -146,7 +146,7 @@ def main(args):
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.lr_drop)
 
     dataset_train = build_dataset(image_set='train', args=args)
-    dataset_val = build_dataset(image_set='val', args=args)
+    dataset_val = build_dataset(image_set='test', args=args)
 
     if args.distributed:
         sampler_train = DistributedSampler(dataset_train)

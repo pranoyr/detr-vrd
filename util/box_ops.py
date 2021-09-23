@@ -15,7 +15,7 @@ def boxes_union(boxes1, boxes2):
 	ymin = np.minimum(boxes1[:, 1], boxes2[:, 1])
 	xmax = np.maximum(boxes1[:, 2], boxes2[:, 2])
 	ymax = np.maximum(boxes1[:, 3], boxes2[:, 3])
-	return torch.from_numpy(np.vstack((xmin, ymin, xmax, ymax)).transpose()).to(cfg.DEVICE)
+	return torch.from_numpy(np.vstack((xmin, ymin, xmax, ymax)).transpose())
 
 
 def box_cxcywh_to_xyxy(x):

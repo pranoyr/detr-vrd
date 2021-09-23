@@ -20,7 +20,7 @@ from .transformer import build_transformer
 
 class DETR(nn.Module):
     """ This is the DETR module that performs object detection """
-    def __init__(self, backbone, transformer, num_classes, num_queries, aux_loss=False):
+    def __init__(self, backbone, transformer, num_classes, num_prd_classes, num_queries, aux_loss=False):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -34,8 +34,17 @@ class DETR(nn.Module):
         self.num_queries = num_queries
         self.transformer = transformer
         hidden_dim = transformer.d_model
-        self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
-        self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+        # self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
+        # self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+
+        self.sbj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
+        self.obj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
+        self.pred_class_embed = nn.Linear(hidden_dim, num_prd_classes + 1)
+
+        self.sbj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+        self.obj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+        self.pred_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
+        
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         self.backbone = backbone
@@ -64,22 +73,22 @@ class DETR(nn.Module):
         assert mask is not None
         hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0]
 
-        # sbj_clas = nn.Linear(hs)
-        # obj_clas = nn.Linear(hs)
-        # pred_clas = nn.Linear(hs)
+        sbj_class = self.sbj_class_embed(hs)
+        obj_class = self.obj_class_embed(hs)
+        pred_class = self.pred_class_embed(hs)
 
-        # sbj_bbox = self.bbox_embed(hs)
-        # obj_bbox = self.bbox_embed(hs)
-        # pred_bbox = self.bbox_embed(hs)
+        sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()
+        obj_bbox = self.obj_bbox_embed(hs).sigmoid()
+        pred_bbox = self.pred_bbox_embed(hs).sigmoid()
 
-    
-        outputs_class = self.class_embed(hs)
-        print("###")
-        print(outputs_class.shape)
-        outputs_coord = self.bbox_embed(hs).sigmoid()
-        out = {'pred_logits': outputs_class[-1], 'pred_boxes': outputs_coord[-1]}
-        if self.aux_loss:
-            out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord)
+        # outputs_class = self.class_embed(hs)
+        # print("###")
+        # print(outputs_class.shape)
+        # outputs_coord = self.bbox_embed(hs).sigmoid()
+        out = {'sbj_logits': sbj_class[-1], 'sbj_boxes': sbj_bbox[-1], 'obj_logits': obj_class[-1], \
+        'obj_boxes': obj_bbox[-1], 'prd_logits': pred_class[-1], 'prd_boxes': pred_bbox[-1]}
+        # if self.aux_loss:
+        #     out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord)
         return out
 
     @torch.jit.unused
@@ -120,25 +129,25 @@ class SetCriterion(nn.Module):
         """Classification loss (NLL)
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]
         """
-        assert 'pred_logits' in outputs
-        src_logits = outputs['pred_logits']
+        # assert 'pred_logits' in outputs
+        src_logits = outputs['sbj_logits']
 
         idx = self._get_src_permutation_idx(indices)
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
-        target_classes = torch.full(src_logits.shape[:2], self.num_classes,
+        total_loss_ce = []
+        for i in ["sbj", "obj", "prd"]:
+            target_classes_o = torch.cat([t[f'{i}_labels'][J] for t, (_, J) in zip(targets, indices)])
+            target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                     dtype=torch.int64, device=src_logits.device)
-        target_classes[idx] = target_classes_o
-        print(target_classes)
+            target_classes[idx] = target_classes_o
+            loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight)
+            total_loss_ce.append(loss_ce)
 
-        print("TARGET")
-        print(target_classes.shape)
-        print(src_logits.transpose(1, 2).shape)
-        loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight)
-        losses = {'loss_ce': loss_ce}
+        total_loss_ce = sum(total_loss_ce)
+        losses = {'loss_ce': total_loss_ce}
 
-        if log:
-            # TODO this should probably be a separate loss, not hacked in this one here
-            losses['class_error'] = 100 - accuracy(src_logits[idx], target_classes_o)[0]
+        # if log:
+        #     # TODO this should probably be a separate loss, not hacked in this one here
+        #     losses['class_error'] = 100 - accuracy(src_logits[idx], target_classes_o)[0]
         return losses
 
     @torch.no_grad()
@@ -146,13 +155,17 @@ class SetCriterion(nn.Module):
         """ Compute the cardinality error, ie the absolute error in the number of predicted non-empty boxes
         This is not really a loss, it is intended for logging purposes only. It doesn't propagate gradients
         """
-        pred_logits = outputs['pred_logits']
+        pred_logits = outputs['sbj_logits']
         device = pred_logits.device
-        tgt_lengths = torch.as_tensor([len(v["labels"]) for v in targets], device=device)
-        # Count the number of predictions that are NOT "no-object" (which is the last class)
-        card_pred = (pred_logits.argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
-        card_err = F.l1_loss(card_pred.float(), tgt_lengths.float())
-        losses = {'cardinality_error': card_err}
+        loss = []
+        for i in ["sbj", "obj", "prd"]:
+            tgt_lengths = torch.as_tensor([len(v[f"{i}_labels"]) for v in targets], device=device)
+            # Count the number of predictions that are NOT "no-object" (which is the last class)
+            card_pred = (i[f"{i}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
+            card_err = F.l1_loss(card_pred.float(), tgt_lengths.float())
+            loss.append(card_err)
+
+        losses = {'cardinality_error': sum(loss)}
         return losses
 
     def loss_boxes(self, outputs, targets, indices, num_boxes):
@@ -160,9 +173,13 @@ class SetCriterion(nn.Module):
            targets dicts must contain the key "boxes" containing a tensor of dim [nb_target_boxes, 4]
            The target boxes are expected in format (center_x, center_y, w, h), normalized by the image size.
         """
-        assert 'pred_boxes' in outputs
+        # assert 'pred_boxes' in outputs
         idx = self._get_src_permutation_idx(indices)
-        src_boxes = outputs['pred_boxes'][idx]
+
+        src_boxes = outputs['sbj_boxes'][idx]
+
+        for i in [sbj, obj, prd]:
+    
         target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
 
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
@@ -170,10 +187,18 @@ class SetCriterion(nn.Module):
         losses = {}
         losses['loss_bbox'] = loss_bbox.sum() / num_boxes
 
+
+
+
+
         loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
             box_ops.box_cxcywh_to_xyxy(src_boxes),
             box_ops.box_cxcywh_to_xyxy(target_boxes)))
         losses['loss_giou'] = loss_giou.sum() / num_boxes
+
+
+
+
         return losses
 
     def loss_masks(self, outputs, targets, indices, num_boxes):
@@ -240,7 +265,7 @@ class SetCriterion(nn.Module):
         indices = self.matcher(outputs_without_aux, targets)
 
         # Compute the average number of target boxes accross all nodes, for normalization purposes
-        num_boxes = sum(len(t["labels"]) for t in targets)
+        num_boxes = sum(len(t["sbj_labels"]) for t in targets)
         num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
         if is_dist_avail_and_initialized():
             torch.distributed.all_reduce(num_boxes)
@@ -325,7 +350,9 @@ def build(args):
     # you should pass `num_classes` to be 2 (max_obj_id + 1).
     # For more details on this, check the following discussion
     # https://github.com/facebookresearch/detr/issues/108#issuecomment-650269223
-    num_classes = 20 if args.dataset_file != 'coco' else 91
+    # num_classes = 20 if args.dataset_file != 'coco' else 91
+    num_classes = 100
+    num_prd_classes = 70
     if args.dataset_file == "coco_panoptic":
         # for panoptic, we just add a num_classes that is large enough to hold
         # max_obj_id + 1, but the exact value doesn't really matter
@@ -340,6 +367,7 @@ def build(args):
         backbone,
         transformer,
         num_classes=num_classes,
+        num_prd_classes = num_prd_classes,
         num_queries=args.num_queries,
         aux_loss=args.aux_loss,
     )
