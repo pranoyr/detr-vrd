@@ -1,24 +1,12 @@
 import json
 import os
-
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import torch
-from torchvision.transforms.transforms import GaussianBlur
-from config import cfg
 from util.box_ops import boxes_union
 from pathlib import Path
 from PIL import Image
-from shapely.geometry import box
-from shapely.ops import cascaded_union
-from skimage import io, transform
 import datasets.transforms as T
-from torch.utils.data import DataLoader, Dataset
-from .transforms import GaussianNoise
-from torchvision import transforms, utils
-from utils.boxes import y1y2x1x2_to_x1y1x2y2
+from torch.utils.data import Dataset
+from util.box_ops import y1y2x1x2_to_x1y1x2y2
 
 
 def make_image_list(dataset_path, type):
@@ -61,9 +49,10 @@ class VRDDataset(Dataset):
 		# self.preds.insert(0, 'unknown')
 
 		self._class_to_ind = dict(zip(self.classes, range(len(self.classes))))
-		self._preds_to_ind = dict(
-			zip(self.preds, range(len(self.preds))))
+		self._preds_to_ind = dict(zip(self.preds, range(len(self.preds))))
 		self.imgs_list = make_image_list(self.dataset_path, self.image_set)
+
+		print(self._class_to_ind)
 
 		normalize = T.Compose([
 			T.ToTensor(),
@@ -79,7 +68,7 @@ class VRDDataset(Dataset):
 					T.RandomResize(scales, max_size=1333),
 					T.Compose([
 						T.RandomResize([400, 500, 600]),
-						T.RandomSizeCrop(384, 600),
+						# T.RandomSizeCrop(384, 600),
 						T.RandomResize(scales, max_size=1333),
 					])
 				),
@@ -129,7 +118,7 @@ class VRDDataset(Dataset):
 			gt_sbj_bbox = y1y2x1x2_to_x1y1x2y2(gt_sbj_bbox)
 			gt_obj_bbox = y1y2x1x2_to_x1y1x2y2(gt_obj_bbox)
 			gt_pred_bbox = boxes_union(gt_sbj_bbox, gt_obj_bbox)
-
+			
 			# prepare labels for subject and object
 			# map to word
 			gt_sbj_label = self.all_objects[gt_sbj_label]
@@ -137,9 +126,9 @@ class VRDDataset(Dataset):
 			predicate = self.predicates[predicate]
 			# map to new index
 			gt_sbj_label = self._class_to_ind[gt_sbj_label]  
-			gt_obj_label = self._preds_to_ind[predicate] 			
-			predicate = self._class_to_ind[gt_obj_label]
-
+			gt_obj_label = self._class_to_ind[gt_obj_label] 			
+			predicate = self._preds_to_ind[predicate]
+			
 			# append to list
 			sbj_boxes.append(gt_sbj_bbox)
 			obj_boxes.append(gt_obj_bbox)
@@ -151,9 +140,10 @@ class VRDDataset(Dataset):
 		sbj_boxes = torch.stack(sbj_boxes).type(torch.FloatTensor)
 		obj_boxes = torch.stack(obj_boxes).type(torch.FloatTensor)
 		prd_boxes = torch.stack(prd_boxes).type(torch.FloatTensor)
-		sbj_labels = torch.stack(sbj_labels).type(torch.LongTensor)
-		obj_labels = torch.stack(obj_labels).type(torch.LongTensor)
-		prd_labels = torch.stack(prd_labels).type(torch.LongTensor)
+		sbj_labels = torch.tensor(sbj_labels, dtype=torch.int64)
+		obj_labels = torch.tensor(obj_labels, dtype=torch.int64)
+		prd_labels = torch.tensor(prd_labels, dtype=torch.int64)
+
 
 		targets = {"sbj_boxes": sbj_boxes, "prd_boxes": prd_boxes, "obj_boxes": obj_boxes, \
 		"sbj_labels": sbj_labels, "prd_labels": prd_labels, "obj_labels": obj_labels}

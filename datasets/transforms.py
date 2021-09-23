@@ -2,6 +2,7 @@
 """
 Transforms and data augmentation for both image + bbox.
 """
+from os import killpg
 import random
 
 import PIL
@@ -30,9 +31,9 @@ def crop(image, target, region):
             cropped_boxes = boxes - torch.as_tensor([j, i, j, i])
             cropped_boxes = torch.min(cropped_boxes.reshape(-1, 2, 2), max_size)
             cropped_boxes = cropped_boxes.clamp(min=0)
-            area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
+            # area = (cropped_boxes[:, 1, :] - cropped_boxes[:, 0, :]).prod(dim=1)
             target[k] = cropped_boxes.reshape(-1, 4)
-            target["area"] = area
+            # target["area"] = area
             fields.append(k)
 
         # if "masks" in target:
@@ -113,7 +114,7 @@ def resize(image, target, size, max_size=None):
 
     target = target.copy()
     for k, _ in target.items():
-        if "boxes" in target:
+        if "boxes" in k:
             boxes = target[k]
             scaled_boxes = boxes * torch.as_tensor([ratio_width, ratio_height, ratio_width, ratio_height])
             target[k] = scaled_boxes
@@ -124,7 +125,7 @@ def resize(image, target, size, max_size=None):
             target["area"] = scaled_area
 
         h, w = size
-        target["size"] = torch.tensor([h, w])
+        # target["size"] = torch.tensor([h, w])
 
         if "masks" in target:
             target['masks'] = interpolate(

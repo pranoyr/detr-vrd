@@ -6,16 +6,24 @@ import torch
 from torchvision.ops.boxes import box_area
 import numpy as np
 
+def y1y2x1x2_to_x1y1x2y2(y1y2x1x2):
+	x1 = y1y2x1x2[2]
+	y1 = y1y2x1x2[0]
+	x2 = y1y2x1x2[3]
+	y2 = y1y2x1x2[1]
+	return torch.tensor([x1, y1, x2, y2],dtype=torch.float)
 
 def boxes_union(boxes1, boxes2):
 	assert boxes1.shape == boxes2.shape
 	boxes1 = boxes1.cpu().numpy()
 	boxes2 = boxes2.cpu().numpy()
+	boxes1 = np.expand_dims(boxes1, axis=0)
+	boxes2 = np.expand_dims(boxes2, axis=0)
 	xmin = np.minimum(boxes1[:, 0], boxes2[:, 0])
 	ymin = np.minimum(boxes1[:, 1], boxes2[:, 1])
 	xmax = np.maximum(boxes1[:, 2], boxes2[:, 2])
 	ymax = np.maximum(boxes1[:, 3], boxes2[:, 3])
-	return torch.from_numpy(np.vstack((xmin, ymin, xmax, ymax)).transpose())
+	return torch.from_numpy(np.vstack((xmin, ymin, xmax, ymax)).transpose()).squeeze(0)
 
 
 def box_cxcywh_to_xyxy(x):
