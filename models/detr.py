@@ -138,7 +138,7 @@ class SetCriterion(nn.Module):
 
         idx = self._get_src_permutation_idx(indices)
         total_loss_ce = []
-        for prefix in ["sbj", "obj", "prd"]:
+        for prefix in ["sbj", "prd", "obj"]:
             target_classes_o = torch.cat([t[f'{prefix}_labels'][J] for t, (_, J) in zip(targets, indices)])
             target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                     dtype=torch.int64, device=src_logits.device)
@@ -154,9 +154,9 @@ class SetCriterion(nn.Module):
         total_loss_ce = sum(total_loss_ce)
         losses = {'loss_ce': total_loss_ce}
 
-        # if log:
-        #     # TODO this should probably be a separate loss, not hacked in this one here
-        #     losses['class_error'] = 100 - accuracy(src_logits[idx], target_classes_o)[0]
+        if log:
+            # TODO this should probably be a separate loss, not hacked in this one here
+            losses['class_error'] = 100 - accuracy(src_logits[idx], target_classes_o)[0]
         return losses
 
     @torch.no_grad()
@@ -170,7 +170,7 @@ class SetCriterion(nn.Module):
         for prefix in ["sbj", "obj", "prd"]:
             tgt_lengths = torch.as_tensor([len(v[f"{prefix}_labels"]) for v in targets], device=device)
             # Count the number of predictions that are NOT "no-object" (which is the last class)
-            card_pred = (i[f"{prefix}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
+            card_pred = (outputs[f"{prefix}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
             card_err = F.l1_loss(card_pred.float(), tgt_lengths.float())
             loss.append(card_err)
 
