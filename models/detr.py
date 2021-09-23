@@ -180,8 +180,8 @@ class SetCriterion(nn.Module):
         for i in ["sbj", "obj", "prd"]:
             target_boxes = torch.cat([t[f"{i}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
             loss_bbox = F.l1_loss(outputs[f"{i}_boxes"][idx], target_boxes, reduction='none')
-            loss = loss_bbox.sum() / num_boxes
-            total_loss_bbox.append(loss)
+            loss_bbox = loss_bbox.sum() / num_boxes
+            total_loss_bbox.append(loss_bbox)
 
         losses = {}
         losses['loss_bbox'] = sum(total_loss_bbox)
