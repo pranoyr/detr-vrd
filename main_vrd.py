@@ -122,10 +122,9 @@ def main(args):
     model.to(device)
 
     # print(model)
-
-    x = torch.Tensor(2,3,224,224)
-    outputs = model(x)
-    print(outputs.keys())
+    # x = torch.Tensor(2,3,224,224)
+    # outputs = model(x)
+    # print(outputs.keys())
 
     model_without_ddp = model
     if args.distributed:
