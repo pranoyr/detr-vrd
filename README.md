@@ -1,4 +1,4 @@
-**DE⫶TR**: End-to-End Object Detection with Transformers
+<!-- **DE⫶TR**: End-to-End Object Detection with Transformers
 ========
 PyTorch training code and pretrained models for **DETR** (**DE**tection **TR**ansformer).
 We replace the full complex hand-crafted object detection pipeline with a Transformer, and match Faster R-CNN with a ResNet-50, obtaining **42 AP** on COCO using half the computation power (FLOPs) and the same number of parameters. Inference in 50 lines of PyTorch.
@@ -260,4 +260,4 @@ For instance segmentation only, simply remove the `dataset_file` and `coco_panop
 DETR is released under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.
 
 # Contributing
-We actively welcome your pull requests! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) for more info.
+We actively welcome your pull requests! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) for more info. -->
