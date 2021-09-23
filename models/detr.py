@@ -175,26 +175,27 @@ class SetCriterion(nn.Module):
         """
         # assert 'pred_boxes' in outputs
         idx = self._get_src_permutation_idx(indices)
-
-        src_boxes = outputs['sbj_boxes'][idx]
-
-        for i in [sbj, obj, prd]:
-    
-        target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
-
-        loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction='none')
+        # src_boxes = outputs['sbj_boxes'][idx]
+        total_loss_bbox = []
+        for i in ["sbj", "obj", "prd"]:
+            target_boxes = torch.cat([t[f"{i}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+            loss_bbox = F.l1_loss(outputs[f"{i}_boxes"][idx], target_boxes, reduction='none')
+            loss = loss_bbox.sum() / num_boxes
+            total_loss_bbox.append(loss)
 
         losses = {}
-        losses['loss_bbox'] = loss_bbox.sum() / num_boxes
+        losses['loss_bbox'] = sum(total_loss_bbox)
 
+        total_loss_giou = []
+        for i in ["sbj", "obj", "prd"]:
+            loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
+                box_ops.box_cxcywh_to_xyxy(outputs[f"{i}_boxes"][idx]),
+                box_ops.box_cxcywh_to_xyxy(target_boxes)))
+            loss_giou = loss_giou.sum() / num_boxes
+            total_loss_giou.append(loss_giou)
+                
 
-
-
-
-        loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
-            box_ops.box_cxcywh_to_xyxy(src_boxes),
-            box_ops.box_cxcywh_to_xyxy(target_boxes)))
-        losses['loss_giou'] = loss_giou.sum() / num_boxes
+        losses['loss_giou'] = sum(total_loss_giou)
 
 
 
