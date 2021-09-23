@@ -188,18 +188,14 @@ class SetCriterion(nn.Module):
 
         total_loss_giou = []
         for i in ["sbj", "obj", "prd"]:
+            target_boxes = torch.cat([t[f"{i}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
             loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
                 box_ops.box_cxcywh_to_xyxy(outputs[f"{i}_boxes"][idx]),
                 box_ops.box_cxcywh_to_xyxy(target_boxes)))
             loss_giou = loss_giou.sum() / num_boxes
             total_loss_giou.append(loss_giou)
                 
-
         losses['loss_giou'] = sum(total_loss_giou)
-
-
-
-
         return losses
 
     def loss_masks(self, outputs, targets, indices, num_boxes):
