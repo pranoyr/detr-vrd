@@ -138,17 +138,17 @@ class SetCriterion(nn.Module):
 
         idx = self._get_src_permutation_idx(indices)
         total_loss_ce = []
-        for i in ["sbj", "obj", "prd"]:
-            target_classes_o = torch.cat([t[f'{i}_labels'][J] for t, (_, J) in zip(targets, indices)])
+        for prefix in ["sbj", "obj", "prd"]:
+            target_classes_o = torch.cat([t[f'{prefix}_labels'][J] for t, (_, J) in zip(targets, indices)])
             target_classes = torch.full(src_logits.shape[:2], self.num_classes,
                                     dtype=torch.int64, device=src_logits.device)
             target_classes[idx] = target_classes_o
-            if i=="prd":
+            if prefix=="prd":
                 target_classes = torch.full(src_logits.shape[:2], self.num_prd_classes,
                                     dtype=torch.int64, device=src_logits.device)
-                loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight_pred)
+                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(1, 2), target_classes, self.empty_weight_pred)
             else:
-                loss_ce = F.cross_entropy(outputs[f'{i}_logits'].transpose(1, 2), target_classes, self.empty_weight)
+                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(1, 2), target_classes, self.empty_weight)
             total_loss_ce.append(loss_ce)
 
         total_loss_ce = sum(total_loss_ce)
@@ -167,10 +167,10 @@ class SetCriterion(nn.Module):
         pred_logits = outputs['sbj_logits']
         device = pred_logits.device
         loss = []
-        for i in ["sbj", "obj", "prd"]:
-            tgt_lengths = torch.as_tensor([len(v[f"{i}_labels"]) for v in targets], device=device)
+        for prefix in ["sbj", "obj", "prd"]:
+            tgt_lengths = torch.as_tensor([len(v[f"{prefix}_labels"]) for v in targets], device=device)
             # Count the number of predictions that are NOT "no-object" (which is the last class)
-            card_pred = (i[f"{i}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
+            card_pred = (i[f"{prefix}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
             card_err = F.l1_loss(card_pred.float(), tgt_lengths.float())
             loss.append(card_err)
 
@@ -186,9 +186,9 @@ class SetCriterion(nn.Module):
         idx = self._get_src_permutation_idx(indices)
         # src_boxes = outputs['sbj_boxes'][idx]
         total_loss_bbox = []
-        for i in ["sbj", "obj", "prd"]:
-            target_boxes = torch.cat([t[f"{i}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
-            loss_bbox = F.l1_loss(outputs[f"{i}_boxes"][idx], target_boxes, reduction='none')
+        for prefix in ["sbj", "obj", "prd"]:
+            target_boxes = torch.cat([t[f"{prefix}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+            loss_bbox = F.l1_loss(outputs[f"{prefix}_boxes"][idx], target_boxes, reduction='none')
             loss_bbox = loss_bbox.sum() / num_boxes
             total_loss_bbox.append(loss_bbox)
 
@@ -196,10 +196,10 @@ class SetCriterion(nn.Module):
         losses['loss_bbox'] = sum(total_loss_bbox)
 
         total_loss_giou = []
-        for i in ["sbj", "obj", "prd"]:
-            target_boxes = torch.cat([t[f"{i}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
+        for prefix in ["sbj", "obj", "prd"]:
+            target_boxes = torch.cat([t[f"{prefix}_boxes"][i] for t, (_, i) in zip(targets, indices)], dim=0)
             loss_giou = 1 - torch.diag(box_ops.generalized_box_iou(
-                box_ops.box_cxcywh_to_xyxy(outputs[f"{i}_boxes"][idx]),
+                box_ops.box_cxcywh_to_xyxy(outputs[f"{prefix}_boxes"][idx]),
                 box_ops.box_cxcywh_to_xyxy(target_boxes)))
             loss_giou = loss_giou.sum() / num_boxes
             total_loss_giou.append(loss_giou)
