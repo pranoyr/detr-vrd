@@ -144,8 +144,8 @@ class VRDDataset(Dataset):
 		obj_labels = torch.tensor(obj_labels, dtype=torch.int64)
 		prd_labels = torch.tensor(prd_labels, dtype=torch.int64)
 
-		targets = {"sbj_boxes": sbj_boxes, "prd_boxes": prd_boxes, "obj_boxes": obj_boxes, \
-		"sbj_labels": sbj_labels, "prd_labels": prd_labels, "obj_labels": obj_labels}
+		# targets = {"sbj_boxes": sbj_boxes, "prd_boxes": prd_boxes, "obj_boxes": obj_boxes, \
+		# "sbj_labels": sbj_labels, "prd_labels": prd_labels, "obj_labels": obj_labels}
 
 		targets = {"sbj_boxes": sbj_boxes, "obj_boxes": obj_boxes, \
 		"sbj_labels": sbj_labels, "obj_labels": obj_labels}
