@@ -6,6 +6,13 @@ import torch
 from torchvision.ops.boxes import box_area
 import numpy as np
 
+def y1y2x1x2_to_x1y1x2y2(y1y2x1x2):
+	x1 = y1y2x1x2[2]
+	y1 = y1y2x1x2[0]
+	x2 = y1y2x1x2[3]
+	y2 = y1y2x1x2[1]
+	return torch.tensor([x1, y1, x2, y2],dtype=torch.float)
+
 
 def box_cxcywh_to_xyxy(x):
 	x_c, y_c, w, h = x.unbind(-1)
