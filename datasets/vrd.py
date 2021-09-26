@@ -147,6 +147,10 @@ class VRDDataset(Dataset):
 		targets = {"sbj_boxes": sbj_boxes, "prd_boxes": prd_boxes, "obj_boxes": obj_boxes, \
 		"sbj_labels": sbj_labels, "prd_labels": prd_labels, "obj_labels": obj_labels}
 
+		targets = {"sbj_boxes": sbj_boxes, "obj_boxes": obj_boxes, \
+		"sbj_labels": sbj_labels, "obj_labels": obj_labels}
+
+
 		return targets
 
 	def __getitem__(self, index):
@@ -154,12 +158,22 @@ class VRDDataset(Dataset):
 		img = self.load_img(img_name)
 		targets = self.load_annotation(img_name)
 		img, targets = self.transform(img, targets)
-		return img, targets   # img: 3xHxW, targets: dict
+
+		all_target = {"boxes":[], "labels":[]}
+		all_target["boxes"].append(targets["sbj_boxes"])
+		all_target["boxes"].append(targets["obj_boxes"])
+		all_target["labels"].append(targets["sbj_labels"])
+		all_target["labels"].append(targets["obj_labels"])
+
+		all_target["boxes"] = torch.cat(all_target["boxes"], dim=0)
+		all_target["labels"] = torch.cat(all_target["labels"], dim=0)
+
+		return img, all_target   # img: 3xHxW, targets: dict
 
 
 def build(image_set, args):
-    root = Path(args.vrd_path)
-    assert root.exists(), f'provided VRD path {root} does not exist'
+	root = Path(args.vrd_path)
+	assert root.exists(), f'provided VRD path {root} does not exist'
   
-    dataset = VRDDataset(root, image_set)
-    return dataset
+	dataset = VRDDataset(root, image_set)
+	return dataset
