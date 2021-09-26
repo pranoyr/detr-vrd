@@ -198,9 +198,9 @@ def main(args):
             model, criterion, data_loader_train, optimizer, device, epoch,
             args.clip_max_norm)
         lr_scheduler.step()
-        if args.output_dir:
+        # if args.output_dir:
             # checkpoint_paths = [output_dir / 'checkpoint.pth']
-            torch.save(model_without_ddp.state_dict(), "./model.pth")
+        torch.save(model_without_ddp.state_dict(), "./model.pth")
             # extra checkpoint before LR drop and every 100 epochs
             # if (epoch + 1) % args.lr_drop == 0 or (epoch + 1) % 100 == 0:
             #     checkpoint_paths.append(output_dir / f'checkpoint{epoch:04}.pth')
