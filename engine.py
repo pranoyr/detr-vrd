@@ -4,6 +4,7 @@ Train and eval functions used in main.py
 """
 import math
 import os
+from random import sample
 import sys
 from typing import Iterable
 

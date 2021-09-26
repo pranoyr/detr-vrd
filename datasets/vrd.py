@@ -167,7 +167,6 @@ class VRDDataset(Dataset):
 
 		all_target["boxes"] = torch.cat(all_target["boxes"], dim=0)
 		all_target["labels"] = torch.cat(all_target["labels"], dim=0)
-
 		return img, all_target   # img: 3xHxW, targets: dict
 
 
