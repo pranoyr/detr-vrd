@@ -145,12 +145,12 @@ class VOCDataset:
 			except ValueError as e:
 				raise_from(ValueError(
 					'could not parse object #{}: {}'.format(i, e)), None)
-			print(type(box))
+
 			annotations['bboxes'].append(box)
 			annotations['labels'].append(label)
 
-		annotations['bboxes'] = torch.tensor(annotations['bboxes'], dtype=torch.float32)
-		annotations['labels'] = torch.tensor(annotations['labels'], dtype=torch.int64)
+		annotations['bboxes'] = np.array(annotations['bboxes'])
+		annotations['labels'] = np.array(annotations['labels'])
 
 		return annotations
 
@@ -207,13 +207,9 @@ class VOCDataset:
 				boxes.append([x1, y1, x2, y2])
 
 				labels.append(self.class_dict[class_name])
-				is_difficult_str = object.find('difficult').text
-				is_difficult.append(int(is_difficult_str)
-									if is_difficult_str else 0)
-
-		return (np.array(boxes, dtype=np.float32),
-				np.array(labels, dtype=np.int64),
-				np.array(is_difficult, dtype=np.uint8))
+	
+		return (torch.tensor(boxes, dtype=torch.float32),
+				torch.tensor(labels, dtype=torch.int64))
 
 	def _read_image(self, image_id):
 		image_file = self.root / f"JPEGImages/{image_id}.jpg"
