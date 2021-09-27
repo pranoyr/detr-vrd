@@ -145,7 +145,7 @@ class VOCDataset:
 			except ValueError as e:
 				raise_from(ValueError(
 					'could not parse object #{}: {}'.format(i, e)), None)
-
+			print(type(box))
 			annotations['bboxes'].append(box)
 			annotations['labels'].append(label)
 
