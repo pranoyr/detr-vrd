@@ -51,3 +51,23 @@ target = {"boxes":[1,2,34]}
 if "boxes" in target:	
 	print("yes")
 
+
+
+# gt
+bird on ground   0.0 0.1
+person on tree   0.8 0.3
+
+#pred
+bird on tree
+
+
+bird on ground   
+
+
+person on ground
+
+
+
+
+
+
