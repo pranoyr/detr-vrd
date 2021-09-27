@@ -62,7 +62,7 @@ class VRDDataset(Dataset):
 		scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 
 		if image_set == 'train':
-    		print("$@#$@#$@#")
+			print("$@#$@#$@#")
 			self.transform =  T.Compose([
 				T.RandomHorizontalFlip(),
 				T.RandomSelect(
@@ -171,7 +171,7 @@ class VRDDataset(Dataset):
 		all_target["labels"] = torch.cat(all_target["labels"], dim=0)
 
 		# all_target["boxes"][:, 0::2].clamp_(min=0, max=w)
-        # boxes[:, 1::2].clamp_(min=0, max=h)
+		# boxes[:, 1::2].clamp_(min=0, max=h)
 		return img, all_target   # img: 3xHxW, targets: dict
 
 
