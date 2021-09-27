@@ -7,6 +7,7 @@ import cv2
 import os
 import datasets.transforms as T
 from PIL import Image
+import torch
 
 def make_voc_transforms(image_set):
 	
@@ -145,11 +146,11 @@ class VOCDataset:
 				raise_from(ValueError(
 					'could not parse object #{}: {}'.format(i, e)), None)
 
-			annotations['bboxes'].append(np.array(box))
+			annotations['bboxes'].append(box)
 			annotations['labels'].append(label)
 
-		annotations['bboxes'] = np.array(annotations['bboxes'])
-		annotations['labels'] = np.array(annotations['labels'])
+		annotations['bboxes'] = torch.tensor(annotations['bboxes'], dtype=torch.float32)
+		annotations['labels'] = np.array(annotations['labels'], dtype=np.int64)
 
 		return annotations
 
