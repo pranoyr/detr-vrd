@@ -156,7 +156,7 @@ class VOCDataset:
 
 	def __getitem__(self, index):
 		image_id = self.ids[index]
-		boxes, labels, is_difficult = self._get_annotation(image_id)
+		boxes, labels = self._get_annotation(image_id)
 		# if not self.keep_difficult:
 		# 	boxes = boxes[is_difficult == 0]
 		# 	labels = labels[is_difficult == 0]
