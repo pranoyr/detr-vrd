@@ -23,10 +23,12 @@ class CocoDetection(torchvision.datasets.CocoDetection):
     def __getitem__(self, idx):
         img, target = super(CocoDetection, self).__getitem__(idx)
         image_id = self.ids[idx]
-        target = {'image_id': image_id, 'annotations': target}
-        img, target = self.prepare(img, target)
+        target = {'image_id': image_id, 'annotations': target}   # coco format: xywh
+        img, target = self.prepare(img, target) # xyxy
         if self._transforms is not None:
             img, target = self._transforms(img, target)
+        # target = {"boxes":[[1,2,3,4],[5,6,7,8]], "labels":[1,2]} # boxes format : cx, cy, w, h
+        # img = torch.rand(3,300,400) 
         return img, target
 
 
@@ -64,8 +66,8 @@ class ConvertCocoPolysToMask(object):
         boxes = [obj["bbox"] for obj in anno]
         # guard against no boxes via resizing
         boxes = torch.as_tensor(boxes, dtype=torch.float32).reshape(-1, 4)
-        boxes[:, 2:] += boxes[:, :2]
-        boxes[:, 0::2].clamp_(min=0, max=w)
+        boxes[:, 2:] += boxes[:, :2]         # 2,3 -> 2,3 + 0,1
+        boxes[:, 0::2].clamp_(min=0, max=w)  # xywh to xyxy
         boxes[:, 1::2].clamp_(min=0, max=h)
 
         classes = [obj["category_id"] for obj in anno]

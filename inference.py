@@ -206,7 +206,7 @@ def detect(im, model, transform):
 
     # keep only predictions with 0.7+ confidence
     probas = outputs['pred_logits'].softmax(-1)[0, :, :-1]
-    keep = probas.max(-1).values > 0.2
+    keep = probas.max(-1).values > 0.3
 
     # convert boxes from [0; 1] to image scales
     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
@@ -217,7 +217,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/6758626_c08d437ac7_b.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/10184508_7c0d0367b2_o.jpg")
 
 scores, boxes = detect(im, model, transform)
 
