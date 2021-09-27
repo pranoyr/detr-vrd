@@ -19,6 +19,8 @@ def get_coco_api_from_dataset(dataset):
 def build_dataset(image_set, args):
     if args.dataset_file == 'coco':
         return build_coco(image_set, args)
+    if args.dataset_file == 'voc':
+        return build_coco(image_set, args)
     if args.dataset_file == 'vrd':
         return build_vrd(image_set, args)
     if args.dataset_file == 'coco_panoptic':
