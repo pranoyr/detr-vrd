@@ -43,6 +43,7 @@ model, criterion, postprocessors = build_model(args)
 model.to("cpu")
 
 model.load_state_dict(torch.load("/Volumes/Neuroplex/model.pth", map_location=torch.device('cpu')))
+model.eval()
 
     # print(model)
 
@@ -206,7 +207,7 @@ def detect(im, model, transform):
 
     # keep only predictions with 0.7+ confidence
     probas = outputs['pred_logits'].softmax(-1)[0, :, :-1]
-    keep = probas.max(-1).values > 0.3
+    keep = probas.max(-1).values > 0.1
 
     # convert boxes from [0; 1] to image scales
     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
@@ -217,7 +218,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/10184508_7c0d0367b2_o.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/12239689_0ad9e20e3a_b.jpg")
 
 scores, boxes = detect(im, model, transform)
 
