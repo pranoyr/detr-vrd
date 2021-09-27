@@ -8,6 +8,38 @@ import datasets.transforms as T
 from torch.utils.data import Dataset
 from util.box_ops import y1y2x1x2_to_x1y1x2y2
 
+def make_vrd_transforms(image_set):
+    	
+	normalize = T.Compose([
+		T.ToTensor(),
+		T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+	])
+
+	scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
+
+	if image_set == 'train':
+		return T.Compose([
+			T.RandomHorizontalFlip(),
+			T.RandomSelect(
+				T.RandomResize(scales, max_size=1333),
+				T.Compose([
+					T.RandomResize([400, 500, 600]),
+					T.RandomSizeCrop(384, 600),
+					T.RandomResize(scales, max_size=1333),
+				])
+			),
+			normalize,
+		])
+
+	if image_set == 'test':
+		return T.Compose([
+			T.RandomResize([800], max_size=1333),
+			normalize,
+		])
+
+	raise ValueError(f'unknown {image_set}')
+
+
 
 def make_image_list(dataset_path, type):
 	imgs_list = []
@@ -29,8 +61,8 @@ def make_image_list(dataset_path, type):
 class VRDDataset(Dataset):
 	"""VRD dataset."""
 
-	def __init__(self, dataset_path, image_set):
-		self.dataset_path = dataset_path
+	def __init__(self, dataset_path, image_se, transform):
+    		self.dataset_path = dataset_path
 		self.image_set = image_set
 		# read annotations file
 		with open(os.path.join(self.dataset_path, 'json_dataset', f'annotations_{self.image_set}.json'), 'r') as f:
@@ -62,7 +94,6 @@ class VRDDataset(Dataset):
 		scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 
 		if image_set == 'train':
-			print("$@#$@#$@#")
 			self.transform =  T.Compose([
 				T.RandomHorizontalFlip(),
 				T.RandomSelect(
@@ -179,5 +210,5 @@ def build(image_set, args):
 	root = Path(args.vrd_path)
 	assert root.exists(), f'provided VRD path {root} does not exist'
   
-	dataset = VRDDataset(root, image_set)
+	dataset = VRDDataset(root, image_set, transform=make_vrd_transforms(image_set))
 	return dataset
