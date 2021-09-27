@@ -37,7 +37,7 @@ class DETR(nn.Module):
         # self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
         # self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
-        self.sbj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
+        self.sbj_class_embed = nn.Linear(hidden_dim, num_classes + 1) 
         self.obj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
         self.pred_class_embed = nn.Linear(hidden_dim, num_prd_classes + 1)
 
@@ -71,17 +71,19 @@ class DETR(nn.Module):
 
         src, mask = features[-1].decompose()
         assert mask is not None
-        hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0]
+        hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0] # [batch_size x num_queries x hidden_dim]
+        
+        # class prediction
+        sbj_class = self.sbj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
+        obj_class = self.obj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
+        pred_class = self.pred_class_embed(hs)  # (2, 100 , 512) -> (2, 100, 70)
 
-        sbj_class = self.sbj_class_embed(hs)
-        obj_class = self.obj_class_embed(hs)
-        pred_class = self.pred_class_embed(hs)
+        print(sbj_class.shape)
 
-        sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()
-        obj_bbox = self.obj_bbox_embed(hs).sigmoid()
-        pred_bbox = self.pred_bbox_embed(hs).sigmoid()
-
-        print(sbj_class[-1].shape)
+        # bbox prediction
+        sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        obj_bbox = self.obj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        pred_bbox = self.pred_bbox_embed(hs).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
 
         # outputs_class = self.class_embed(hs)
         # print("###")
