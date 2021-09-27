@@ -183,16 +183,6 @@ class VRDDataset(Dataset):
 		targets = {"sbj_boxes": sbj_boxes, "obj_boxes": obj_boxes, \
 		"sbj_labels": sbj_labels, "obj_labels": obj_labels}
 
-
-		return targets
-
-	def __getitem__(self, index):
-		img_name = self.imgs_list[index]
-		img = self.load_img(img_name)
-		
-		targets = self.load_annotation(img_name)
-		img, targets = self.transform(img, targets)
-
 		all_target = {"boxes":[], "labels":[]}
 		all_target["boxes"].append(targets["sbj_boxes"])
 		all_target["boxes"].append(targets["obj_boxes"])
@@ -202,9 +192,18 @@ class VRDDataset(Dataset):
 		all_target["boxes"] = torch.cat(all_target["boxes"], dim=0)
 		all_target["labels"] = torch.cat(all_target["labels"], dim=0)
 
+		return all_target
+
+	def __getitem__(self, index):
+		img_name = self.imgs_list[index]
+		img = self.load_img(img_name)
+		
+		targets = self.load_annotation(img_name)
+		img, targets = self.transform(img, targets)
+
 		# all_target["boxes"][:, 0::2].clamp_(min=0, max=w)
 		# boxes[:, 1::2].clamp_(min=0, max=h)
-		return img, all_target   # img: 3xHxW, targets: dict
+		return img, targets   # img: 3xHxW, targets: dict
 
 def build(image_set, args):
 	root = Path(args.vrd_path)
