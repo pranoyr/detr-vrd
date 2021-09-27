@@ -150,7 +150,7 @@ class VOCDataset:
 			annotations['labels'].append(label)
 
 		annotations['bboxes'] = torch.tensor(annotations['bboxes'], dtype=torch.float32)
-		annotations['labels'] = np.array(annotations['labels'], dtype=np.int64)
+		annotations['labels'] = torch.tensor(annotations['labels'], dtype=np.int64)
 
 		return annotations
 
