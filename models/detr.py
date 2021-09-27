@@ -78,8 +78,6 @@ class DETR(nn.Module):
         obj_class = self.obj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
         pred_class = self.pred_class_embed(hs)  # (2, 100 , 512) -> (2, 100, 70)
 
-        print(sbj_class.shape)
-
         # bbox prediction
         sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
         obj_bbox = self.obj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
