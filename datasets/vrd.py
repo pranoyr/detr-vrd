@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 from util.box_ops import y1y2x1x2_to_x1y1x2y2
 
 def make_vrd_transforms(image_set):
-    	
+		
 	normalize = T.Compose([
 		T.ToTensor(),
 		T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -40,7 +40,6 @@ def make_vrd_transforms(image_set):
 	raise ValueError(f'unknown {image_set}')
 
 
-
 def make_image_list(dataset_path, type):
 	imgs_list = []
 	with open(os.path.join(dataset_path, 'json_dataset', f'annotations_{type}.json'), 'r') as f:
@@ -61,9 +60,11 @@ def make_image_list(dataset_path, type):
 class VRDDataset(Dataset):
 	"""VRD dataset."""
 
-	def __init__(self, dataset_path, image_se, transform):
-    		self.dataset_path = dataset_path
+	def __init__(self, dataset_path, image_set, transform=None):
+		self.dataset_path = dataset_path
+		self.transform = transform
 		self.image_set = image_set
+
 		# read annotations file
 		with open(os.path.join(self.dataset_path, 'json_dataset', f'annotations_{self.image_set}.json'), 'r') as f:
 			self.annotations = json.load(f)
@@ -86,32 +87,32 @@ class VRDDataset(Dataset):
 
 		print(self._class_to_ind)
 
-		normalize = T.Compose([
-			T.ToTensor(),
-			T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-		])
+		# normalize = T.Compose([
+		# 	T.ToTensor(),
+		# 	T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+		# ])
 
-		scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
+		# scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 
-		if image_set == 'train':
-			self.transform =  T.Compose([
-				T.RandomHorizontalFlip(),
-				T.RandomSelect(
-					T.RandomResize(scales, max_size=1333),
-					T.Compose([
-						T.RandomResize([400, 500, 600]),
-						T.RandomSizeCrop(384, 600),
-						T.RandomResize(scales, max_size=1333),
-					])
-				),
-				normalize,
-			])
+		# if image_set == 'train':
+		# 	self.transform =  T.Compose([
+		# 		T.RandomHorizontalFlip(),
+		# 		T.RandomSelect(
+		# 			T.RandomResize(scales, max_size=1333),
+		# 			T.Compose([
+		# 				T.RandomResize([400, 500, 600]),
+		# 				T.RandomSizeCrop(384, 600),
+		# 				T.RandomResize(scales, max_size=1333),
+		# 			])
+		# 		),
+		# 		normalize,
+		# 	])
 
-		if image_set == 'test':
-			self.transform =  T.Compose([
-				T.RandomResize([800], max_size=1333),
-				normalize,
-			])
+		# if image_set == 'test':
+		# 	self.transform =  T.Compose([
+		# 		T.RandomResize([800], max_size=1333),
+		# 		normalize,
+		# 	])
 
 	def __len__(self):
 		return len(self.imgs_list)
@@ -204,7 +205,6 @@ class VRDDataset(Dataset):
 		# all_target["boxes"][:, 0::2].clamp_(min=0, max=w)
 		# boxes[:, 1::2].clamp_(min=0, max=h)
 		return img, all_target   # img: 3xHxW, targets: dict
-
 
 def build(image_set, args):
 	root = Path(args.vrd_path)
