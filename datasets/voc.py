@@ -161,7 +161,7 @@ class VOCDataset:
 		# 	boxes = boxes[is_difficult == 0]
 		# 	labels = labels[is_difficult == 0]
 		image = self._read_image(image_id)
-		target = {"boxes": boxes, "labels": labels}
+		target = {"boxes": boxes, "labels": labels,}
 		img, target= self.transform(image, target)
 		return img, target
 

@@ -62,6 +62,7 @@ class VRDDataset(Dataset):
 		scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
 
 		if image_set == 'train':
+    		print("$@#$@#$@#")
 			self.transform =  T.Compose([
 				T.RandomHorizontalFlip(),
 				T.RandomSelect(
