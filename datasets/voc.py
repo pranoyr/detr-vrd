@@ -163,6 +163,7 @@ class VOCDataset:
 		image = self._read_image(image_id)
 		target = {"boxes": boxes, "labels": labels}
 		img, target= self.transform(image, target)
+		
 		return img, target
 
 	def get_image(self, index):
