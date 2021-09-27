@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 import cv2
 import os
 import datasets.transforms as T
+from PIL import Image
 
 def make_voc_transforms(image_set):
 	
@@ -215,8 +216,7 @@ class VOCDataset:
 
 	def _read_image(self, image_id):
 		image_file = self.root / f"JPEGImages/{image_id}.jpg"
-		image = cv2.imread(str(image_file))
-		image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		image = Image.open(image_file).convert('RGB')
 		return image
 
 def build(image_set, args):
