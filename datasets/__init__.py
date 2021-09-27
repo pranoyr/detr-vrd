@@ -4,6 +4,7 @@ import torchvision
 
 from .coco import build as build_coco
 from .vrd import build as build_vrd
+from .voc import build as build_voc
 
 
 def get_coco_api_from_dataset(dataset):
@@ -20,7 +21,7 @@ def build_dataset(image_set, args):
     if args.dataset_file == 'coco':
         return build_coco(image_set, args)
     if args.dataset_file == 'voc':
-        return build_coco(image_set, args)
+        return build_voc(image_set, args)
     if args.dataset_file == 'vrd':
         return build_vrd(image_set, args)
     if args.dataset_file == 'coco_panoptic':
