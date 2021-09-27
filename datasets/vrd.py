@@ -156,6 +156,7 @@ class VRDDataset(Dataset):
 	def __getitem__(self, index):
 		img_name = self.imgs_list[index]
 		img = self.load_img(img_name)
+		
 		targets = self.load_annotation(img_name)
 		img, targets = self.transform(img, targets)
 
@@ -167,6 +168,9 @@ class VRDDataset(Dataset):
 
 		all_target["boxes"] = torch.cat(all_target["boxes"], dim=0)
 		all_target["labels"] = torch.cat(all_target["labels"], dim=0)
+
+		# all_target["boxes"][:, 0::2].clamp_(min=0, max=w)
+        # boxes[:, 1::2].clamp_(min=0, max=h)
 		return img, all_target   # img: 3xHxW, targets: dict
 
 
