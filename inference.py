@@ -160,9 +160,10 @@ In the following cells, we define the mapping from class indices to names.
 
 import os 
 
-with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
-	CLASSES = json.load(f)
+# with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
+# 	CLASSES = json.load(f)
 
+classes = ['bicycle', 'truck', 'tt', 'bus', 'car', 'motorbike', 'autorickshaw']
 # root = os.path.join(self.dataset_path, 'sg_dataset', f'sg_{self.image_set}_images')
 
 # colors for visualization
