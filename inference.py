@@ -122,6 +122,11 @@ class DETRdemo(nn.Module):
 
 
 import util.misc as utils
+
+parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
+args = parser.parse_args()
+
+
 utils.init_distributed_mode(args)
 print("git:\n  {}\n".format(utils.get_sha()))
 
@@ -129,9 +134,6 @@ if args.frozen_weights is not None:
     assert args.masks, "Frozen training is meant for segmentation only"
 print(args)
 
-
-parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
-args = parser.parse_args()
 
 device = torch.device(args.device)
 
