@@ -136,7 +136,7 @@ class DETRdemo(nn.Module):
 
 model, criterion, postprocessors = build_model(args)
 
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[1])
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
 model_without_ddp = model.module
 
 # model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=False)
