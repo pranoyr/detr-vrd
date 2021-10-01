@@ -141,6 +141,8 @@ device = torch.device(args.device)
 
 model, criterion, postprocessors = build_model(args)
 
+model.to(device)
+
 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
 model_without_ddp = model.module
 
