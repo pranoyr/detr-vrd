@@ -40,9 +40,10 @@ parser = argparse.ArgumentParser('DETR training and evaluation script', parents=
 args = parser.parse_args()
 
 model, criterion, postprocessors = build_model(args)
+# model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=True)
 model.to("cpu")
 
-model.load_state_dict(torch.load("/Volumes/Neuroplex/model.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("/Volumes/Neuroplex/detr_pretrained.pth", map_location=torch.device('cpu')))
 model.eval()
 
     # print(model)
@@ -141,29 +142,29 @@ In the following cells, we define the mapping from class indices to names.
 """
 
 # COCO classes
-# CLASSES = [
-#     'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-#     'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
-#     'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
-#     'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack',
-#     'umbrella', 'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis',
-#     'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
-#     'skateboard', 'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass',
-#     'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich',
-#     'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
-#     'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table', 'N/A',
-#     'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
-#     'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A',
-#     'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
-#     'toothbrush'
-# ]
+CLASSES = [
+    'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+    'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
+    'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
+    'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack',
+    'umbrella', 'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis',
+    'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
+    'skateboard', 'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass',
+    'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich',
+    'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
+    'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table', 'N/A',
+    'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
+    'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A',
+    'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
+    'toothbrush'
+]
 
 import os 
 
 # with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
 # 	CLASSES = json.load(f)
 
-CLASSES  = ['bicycle', 'truck', 'tt', 'bus', 'car', 'motorbike', 'autorickshaw']
+# CLASSES  = ['bicycle', 'truck', 'tt', 'bus', 'car', 'motorbike', 'autorickshaw']
 # root = os.path.join(self.dataset_path, 'sg_dataset', f'sg_{self.image_set}_images')
 
 # colors for visualization
@@ -208,7 +209,7 @@ def detect(im, model, transform):
 
     # keep only predictions with 0.7+ confidence
     probas = outputs['pred_logits'].softmax(-1)[0, :, :-1]
-    keep = probas.max(-1).values > 0.1
+    keep = probas.max(-1).values > 0.5
 
     # convert boxes from [0; 1] to image scales
     bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
