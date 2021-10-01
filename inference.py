@@ -36,14 +36,124 @@ Here is a minimal implementation of DETR:
 from main import get_args_parser
 from models import build_model
 
+from PIL import Image
+import requests
+import matplotlib.pyplot as plt
+
+import torch
+from torch import nn
+from torchvision.models import resnet50
+import torchvision.transforms as T
+torch.set_grad_enabled(False);
+
 parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
 args = parser.parse_args()
 
-model, criterion, postprocessors = build_model(args)
-# model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=True)
-model.to("cpu")
 
-model.load_state_dict(torch.load("/Volumes/Neuroplex/detr_pretrained.pth", map_location=torch.device('cpu')))
+# class DETRdemo(nn.Module):
+#     """
+#     Demo DETR implementation.
+
+#     Demo implementation of DETR in minimal number of lines, with the
+#     following differences wrt DETR in the paper:
+#     * learned positional encoding (instead of sine)
+#     * positional encoding is passed at input (instead of attention)
+#     * fc bbox predictor (instead of MLP)
+#     The model achieves ~40 AP on COCO val5k and runs at ~28 FPS on Tesla V100.
+#     Only batch size 1 supported.
+#     """
+#     def __init__(self, num_classes, hidden_dim=256, nheads=8,
+#                  num_encoder_layers=6, num_decoder_layers=6):
+#         super().__init__()
+
+#         # create ResNet-50 backbone
+#         self.backbone = resnet50()
+#         del self.backbone.fc
+
+#         # create conversion layer
+#         self.conv = nn.Conv2d(2048, hidden_dim, 1)
+
+#         # create a default PyTorch transformer
+#         self.transformer = nn.Transformer(
+#             hidden_dim, nheads, num_encoder_layers, num_decoder_layers)
+
+#         # prediction heads, one extra class for predicting non-empty slots
+#         # note that in baseline DETR linear_bbox layer is 3-layer MLP
+#         self.linear_class = nn.Linear(hidden_dim, num_classes + 1)
+#         self.linear_bbox = nn.Linear(hidden_dim, 4)
+
+#         # output positional encodings (object queries)
+#         self.query_pos = nn.Parameter(torch.rand(100, hidden_dim))
+
+#         # spatial positional encodings
+#         # note that in baseline DETR we use sine positional encodings
+#         self.row_embed = nn.Parameter(torch.rand(50, hidden_dim // 2))
+#         self.col_embed = nn.Parameter(torch.rand(50, hidden_dim // 2))
+
+#     def forward(self, inputs):
+#         # propagate inputs through ResNet-50 up to avg-pool layer
+#         x = self.backbone.conv1(inputs)
+#         x = self.backbone.bn1(x)
+#         x = self.backbone.relu(x)
+#         x = self.backbone.maxpool(x)
+
+#         x = self.backbone.layer1(x)
+#         x = self.backbone.layer2(x)
+#         x = self.backbone.layer3(x)
+#         x = self.backbone.layer4(x)
+
+#         # convert from 2048 to 256 feature planes for the transformer
+#         h = self.conv(x)
+
+#         # construct positional encodings
+#         H, W = h.shape[-2:]
+#         pos = torch.cat([
+#             self.col_embed[:W].unsqueeze(0).repeat(H, 1, 1),
+#             self.row_embed[:H].unsqueeze(1).repeat(1, W, 1),
+#         ], dim=-1).flatten(0, 1).unsqueeze(1)
+
+#         # propagate through the transformer
+#         h = self.transformer(pos + 0.1 * h.flatten(2).permute(2, 0, 1),
+#                              self.query_pos.unsqueeze(1)).transpose(0, 1)
+        
+#         # finally project transformer outputs to class labels and bounding boxes
+#         return {'pred_logits': self.linear_class(h), 
+#                 'pred_boxes': self.linear_bbox(h).sigmoid()}
+
+
+import util.misc as utils
+
+parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
+args = parser.parse_args()
+
+
+utils.init_distributed_mode(args)
+print("git:\n  {}\n".format(utils.get_sha()))
+
+if args.frozen_weights is not None:
+    assert args.masks, "Frozen training is meant for segmentation only"
+print(args)
+
+
+device = torch.device(args.device)
+
+
+
+model, criterion, postprocessors = build_model(args)
+
+model = model.to(device)
+
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
+model_without_ddp = model.module
+
+# model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=False)
+
+# model = DETRdemo(num_classes=91)
+
+
+# model.to("cpu")
+
+model.load_state_dict(torch.load("/Volumes/Neuroplex/detr-r50-e632da11.pth", map_location=torch.device('cpu')))
 model.eval()
 
     # print(model)
