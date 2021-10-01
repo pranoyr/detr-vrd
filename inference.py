@@ -143,8 +143,8 @@ model, criterion, postprocessors = build_model(args)
 
 model = model.to(device)
 
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
-model_without_ddp = model.module
+# model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
+# model_without_ddp = model.module
 
 # model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=False)
 
@@ -152,8 +152,8 @@ model_without_ddp = model.module
 
 
 # model.to("cpu")
-
-model.load_state_dict(torch.load("/Volumes/Neuroplex/detr-r50-e632da11.pth", map_location=torch.device('cpu')))
+state_dict =torch.load("/Volumes/Neuroplex/detr-r50-e632da11.pth", map_location=torch.device('cpu'))["model"]
+model.load_state_dict(state_dict, strict=False)
 model.eval()
 
     # print(model)
