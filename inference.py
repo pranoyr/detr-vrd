@@ -129,9 +129,11 @@ if args.frozen_weights is not None:
     assert args.masks, "Frozen training is meant for segmentation only"
 print(args)
 
+
+parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
+args = parser.parse_args()
+
 device = torch.device(args.device)
-
-
 
 
 
