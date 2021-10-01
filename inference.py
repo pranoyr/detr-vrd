@@ -141,7 +141,7 @@ device = torch.device(args.device)
 
 model, criterion, postprocessors = build_model(args)
 
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
 model_without_ddp = model.module
 
 # model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=False)
