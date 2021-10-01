@@ -121,14 +121,15 @@ class DETRdemo(nn.Module):
                 'pred_boxes': self.linear_bbox(h).sigmoid()}
 
 
-# utils.init_distributed_mode(args)
-# print("git:\n  {}\n".format(utils.get_sha()))
+import util.misc as utils
+utils.init_distributed_mode(args)
+print("git:\n  {}\n".format(utils.get_sha()))
 
-# if args.frozen_weights is not None:
-#     assert args.masks, "Frozen training is meant for segmentation only"
-# print(args)
+if args.frozen_weights is not None:
+    assert args.masks, "Frozen training is meant for segmentation only"
+print(args)
 
-# device = torch.device(args.device)
+device = torch.device(args.device)
 
 
 
@@ -136,7 +137,7 @@ class DETRdemo(nn.Module):
 
 model, criterion, postprocessors = build_model(args)
 
-model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[0])
+model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
 model_without_ddp = model.module
 
 # model = torch.hub.load('facebookresearch/detr:main', 'detr_resnet50', pretrained=False)
