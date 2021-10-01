@@ -236,5 +236,4 @@ def plot_results(pil_img, prob, boxes):
                 bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
     plt.show()
-    
 plot_results(im, scores, boxes)
