@@ -332,7 +332,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/play1.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/108366605_aaab73a382_b.jpg")
 
 scores, boxes = detect(im, model, transform)
 
