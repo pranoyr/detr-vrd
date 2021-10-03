@@ -123,7 +123,7 @@ def main(args):
 
     # print(model)
 
-    x = torch.Tensor(2,3,224,224)
+    x = torch.Tensor(2,3,500,500)
     outputs = model(x)
     print(outputs.keys())
     print(outputs['pred_logits'][0, :, :-1].shape)
