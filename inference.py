@@ -33,7 +33,7 @@ torch.set_grad_enabled(False);
 Here is a minimal implementation of DETR:
 """
 
-from main import get_args_parser
+from main_vrd import get_args_parser
 from models import build_model
 
 parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
@@ -205,11 +205,11 @@ def detect(im, model, transform):
     outputs = model(img)
 
     # keep only predictions with 0.7+ confidence
-    probas = outputs['sbj_logits'].softmax(-1)[0, :, :-1]
+    probas = outputs['prd_logits'].softmax(-1)[0, :, :-1]
     keep = probas.max(-1).values > 0.2
 
     # convert boxes from [0; 1] to image scales
-    bboxes_scaled = rescale_bboxes(outputs['sbj_boxes'][0, keep], im.size)
+    bboxes_scaled = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
     return probas[keep], bboxes_scaled
 
 """## Using DETR
