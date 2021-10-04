@@ -205,35 +205,53 @@ def detect(im, model, transform):
     outputs = model(img)
 
     # keep only predictions with 0.7+ confidence
-    probas = outputs['prd_logits'].softmax(-1)[0, :, :-1]
-    keep = probas.max(-1).values > 0.2
-
+    probas_sbj = outputs['sbj_logits'].softmax(-1)[0, :, :-1]
+    keep = probas_sbj.max(-1).values > 0.1
     # convert boxes from [0; 1] to image scales
-    bboxes_scaled = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
-    return probas[keep], bboxes_scaled
+    bboxes_scaled_sbj = rescale_bboxes(outputs['sbj_boxes'][0, keep], im.size)
+
+    # keep only predictions with 0.7+ confidence
+    probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
+    keep = probas_prd.max(-1).values > 0.1
+    bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
+
+    # keep only predictions with 0.7+ confidence
+    probas_obj = outputs['obj_logits'].softmax(-1)[0, :, :-1]
+    keep = probas_obj.max(-1).values > 0.1
+    bboxes_scaled_obj = rescale_bboxes(outputs['obj_boxes'][0, keep], im.size)
+    # convert boxes from [0; 1] to image scales
+
+
+    return probas_sbj[keep], probas_prd[keep], probas_obj[keep], bboxes_scaled_sbj, bboxes_scaled_prd, bboxes_scaled_obj
 
 """## Using DETR
 To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/6438875_deae648618_b.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/6758626_c08d437ac7_b.jpg")
 
-scores, boxes = detect(im, model, transform)
+scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_prd, boxes_obj = detect(im, model, transform)
 
 """Let's now visualize the model predictions"""
 
-def plot_results(pil_img, prob, boxes):
+def plot_results(pil_img, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_prd, boxes_obj):
     plt.figure(figsize=(16,10))
     plt.imshow(pil_img)
     ax = plt.gca()
-    for p, (xmin, ymin, xmax, ymax), c in zip(prob, boxes.tolist(), COLORS * 100):
+    
+
+    for s,p,o, (xmin, ymin, xmax, ymax), c in zip(scores_sbj, scores_prd, scores_obj, boxes_sbj.tolist(), COLORS * 100):
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=c, linewidth=3))
-        cl = p.argmax()
-        text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
+        cl_s = s.argmax()
+        cl_p = p.argmax()
+        cl_o = o.argmax()
+        # text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
+        text = f'{CLASSES[cl_s]} {CLASSES[cl_p]} {CLASSES[cl_o]}'
+        print(text)
         ax.text(xmin, ymin, text, fontsize=15,
                 bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
     plt.show()
-plot_results(im, scores, boxes)
+plot_results(im, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_prd, boxes_obj)
