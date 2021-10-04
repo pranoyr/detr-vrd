@@ -41,6 +41,7 @@ args = parser.parse_args()
 
 model, criterion, postprocessors = build_model(args)
 model.to("cpu")
+model.eval()
 
 model.load_state_dict(torch.load("/Volumes/Neuroplex/detd_vrd_model.pth", map_location=torch.device('cpu')))
 
@@ -206,23 +207,28 @@ def detect(im, model, transform):
 
     # keep only predictions with 0.7+ confidence
     probas_sbj = outputs['sbj_logits'].softmax(-1)[0, :, :-1]
-    keep_sbj = probas_sbj.max(-1).values > 0.1
+    keep_s = probas_sbj.max(-1).values > 0.1
     # convert boxes from [0; 1] to image scales
-    bboxes_scaled_sbj = rescale_bboxes(outputs['sbj_boxes'][0, keep_sbj], im.size)
+    bboxes_scaled_sbj = rescale_bboxes(outputs['sbj_boxes'][0, keep_s], im.size)
 
     # keep only predictions with 0.7+ confidence
     probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
-    keep_prd = probas_prd.max(-1).values > 0.1
-    bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep_prd], im.size)
+    keep = probas_prd.max(-1).values > 0.1
+    bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
 
     # keep only predictions with 0.7+ confidence
     probas_obj = outputs['obj_logits'].softmax(-1)[0, :, :-1]
-    keep_obj = probas_obj.max(-1).values > 0.1
-    bboxes_scaled_obj = rescale_bboxes(outputs['obj_boxes'][0, keep_obj], im.size)
+    keep_o = probas_obj.max(-1).values > 0.1
+    bboxes_scaled_obj = rescale_bboxes(outputs['obj_boxes'][0, keep_o], im.size)
     # convert boxes from [0; 1] to image scales
 
 
-    return probas_sbj[keep_sbj], probas_prd[keep_prd], probas_obj[keep_obj], bboxes_scaled_sbj, bboxes_scaled_prd, bboxes_scaled_obj
+    print(len(probas_sbj[keep_s]))
+    print(len(probas_prd[keep]))
+    print(len(probas_obj[keep_o]))
+
+
+    return probas_sbj[keep_s], probas_prd[keep], probas_obj[keep_o], bboxes_scaled_sbj, bboxes_scaled_prd, bboxes_scaled_obj
 
 """## Using DETR
 To try DETRdemo model on your own image just change the URL below.
@@ -245,10 +251,10 @@ def plot_results(pil_img, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_p
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=c, linewidth=3))
         cl_s = s.argmax()
-        cl_p = p.argmax()
-        cl_o = o.argmax()
+        # cl_p = p.argmax()
+        # cl_o = o.argmax()
         # text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
-        text = f'{CLASSES[cl_s]} {CLASSES[cl_p]} {CLASSES[cl_o]}'
+        text = f'{CLASSES[cl_s]} '
         print(text)
         ax.text(xmin, ymin, text, fontsize=15,
                 bbox=dict(facecolor='yellow', alpha=0.5))
