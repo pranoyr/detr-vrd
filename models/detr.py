@@ -144,7 +144,7 @@ class SetCriterion(nn.Module):
         idx = self._get_src_permutation_idx(indices)
         total_loss_ce = []
         for prefix in ["sbj", "obj", "prd"]:
-            src_logits = outputs['{prefix}_logits}']
+            src_logits = outputs[f'{prefix}_logits']
             target_classes_o = torch.cat([t[f'{prefix}_labels'][J] for t, (_, J) in zip(targets, indices)])
             # target_classes = torch.full(src_logits.shape[:2], self.num_classes,
             #                         dtype=torch.int64, device=src_logits.device)
