@@ -126,7 +126,8 @@ def main(args):
     x = torch.Tensor(2,3,500,500)
     outputs = model(x)
     print(outputs.keys())
-    print(outputs['pred_logits'][0, :, :-1].shape)
+    print(outputs['sbj_logits'][0, :, :-1].shape[:2])
+
 
     # model_without_ddp = model
     # if args.distributed:

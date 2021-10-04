@@ -139,11 +139,12 @@ class SetCriterion(nn.Module):
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]
         """
         # assert 'pred_logits' in outputs
-        src_logits = outputs['prd_logits']
+        # src_logits = outputs['prd_logits']
 
         idx = self._get_src_permutation_idx(indices)
         total_loss_ce = []
         for prefix in ["sbj", "obj", "prd"]:
+            src_logits = outputs['{prefix}_logits}']
             target_classes_o = torch.cat([t[f'{prefix}_labels'][J] for t, (_, J) in zip(targets, indices)])
             # target_classes = torch.full(src_logits.shape[:2], self.num_classes,
             #                         dtype=torch.int64, device=src_logits.device)
@@ -173,10 +174,11 @@ class SetCriterion(nn.Module):
         """ Compute the cardinality error, ie the absolute error in the number of predicted non-empty boxes
         This is not really a loss, it is intended for logging purposes only. It doesn't propagate gradients
         """
-        pred_logits = outputs['sbj_logits']
-        device = pred_logits.device
+        # pred_logits = outputs['sbj_logits']
+        device = outputs['sbj_logits'].device
         loss = []
         for prefix in ["sbj", "obj", "prd"]:
+            pred_logits = outputs[f'{prefix}_logits']
             tgt_lengths = torch.as_tensor([len(v[f"{prefix}_labels"]) for v in targets], device=device)
             # Count the number of predictions that are NOT "no-object" (which is the last class)
             card_pred = (outputs[f"{prefix}_logits"].argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
