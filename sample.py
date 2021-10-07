@@ -52,19 +52,26 @@ if "boxes" in target:
 	print("yes")
 
 
+sbj_out_bbox = torch.tensor([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8], [0.5, 0.6, 0.7, 0.8], [2, 1, 4, 1]])
 
-# gt
-bird on ground   0.0 0.1
-person on tree   0.8 0.3
+sbj_tgt_bbox = torch.tensor([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]])
 
-#pred
-bird on tree
-
-
-bird on ground   
+cost_bbox_sbj = torch.cdist(sbj_out_bbox, sbj_tgt_bbox, p=1)
+print(cost_bbox_sbj)
 
 
-person on ground
+# # gt
+# bird on ground   0.0 0.1
+# person on tree   0.8 0.3
+
+# #pred
+# bird on tree
+
+
+# bird on ground   
+
+
+# person on ground
 
 
 

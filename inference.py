@@ -163,6 +163,10 @@ import os
 with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
 	CLASSES = json.load(f)
 
+
+with open(os.path.join(args.vrd_path, 'json_dataset', 'predicates.json'), 'r') as f:
+	PRD_CLASSES = json.load(f)
+
 # root = os.path.join(self.dataset_path, 'sg_dataset', f'sg_{self.image_set}_images')
 
 # colors for visualization
@@ -206,36 +210,37 @@ def detect(im, model, transform):
     outputs = model(img)
 
     # keep only predictions with 0.7+ confidence
-    probas_sbj = outputs['sbj_logits'].softmax(-1)[0, :, :-1]
-    keep_s = probas_sbj.max(-1).values > 0.1
-    # convert boxes from [0; 1] to image scales
-    bboxes_scaled_sbj = rescale_bboxes(outputs['sbj_boxes'][0, keep_s], im.size)
+    probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
+    keep = probas_prd.max(-1).values > 0.5
+    bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
+
 
     # keep only predictions with 0.7+ confidence
-    probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
-    keep = probas_prd.max(-1).values > 0.1
-    bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
+    probas_sbj = outputs['sbj_logits'].softmax(-1)[0, :, :-1]
+    # keep_s = probas_sbj.max(-1).values > 0.5
+    # convert boxes from [0; 1] to image scales
+    bboxes_scaled_sbj = rescale_bboxes(outputs['sbj_boxes'][0, keep], im.size)
+
+  
 
     # keep only predictions with 0.7+ confidence
     probas_obj = outputs['obj_logits'].softmax(-1)[0, :, :-1]
-    keep_o = probas_obj.max(-1).values > 0.1
-    bboxes_scaled_obj = rescale_bboxes(outputs['obj_boxes'][0, keep_o], im.size)
-    # convert boxes from [0; 1] to image scales
+    # keep_o = probas_obj.max(-1).values > 0.5
+    bboxes_scaled_obj = rescale_bboxes(outputs['obj_boxes'][0, keep], im.size)
+   
 
-
-    print(len(probas_sbj[keep_s]))
+    print(len(probas_sbj[keep]))
     print(len(probas_prd[keep]))
-    print(len(probas_obj[keep_o]))
+    print(len(probas_obj[keep]))
 
-
-    return probas_sbj[keep_s], probas_prd[keep], probas_obj[keep_o], bboxes_scaled_sbj, bboxes_scaled_prd, bboxes_scaled_obj
+    return probas_sbj[keep], probas_prd[keep], probas_obj[keep], bboxes_scaled_sbj, bboxes_scaled_prd, bboxes_scaled_obj
 
 """## Using DETR
 To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/6758626_c08d437ac7_b.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/couple-people-man-girl.jpg")
 
 scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_prd, boxes_obj = detect(im, model, transform)
 
@@ -247,14 +252,14 @@ def plot_results(pil_img, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_p
     ax = plt.gca()
     
 
-    for s,p,o, (xmin, ymin, xmax, ymax), c in zip(scores_sbj, scores_prd, scores_obj, boxes_sbj.tolist(), COLORS * 100):
+    for s,p,o, (xmin, ymin, xmax, ymax), c in zip(scores_sbj, scores_prd, scores_obj, boxes_obj.tolist(), COLORS * 100):
         ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
                                    fill=False, color=c, linewidth=3))
         cl_s = s.argmax()
-        # cl_p = p.argmax()
-        # cl_o = o.argmax()
+        cl_p = p.argmax()
+        cl_o = o.argmax()
         # text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
-        text = f'{CLASSES[cl_s]} '
+        text = f'{CLASSES[cl_s]}  {PRD_CLASSES[cl_p]} {CLASSES[cl_o]}'
         print(text)
         ax.text(xmin, ymin, text, fontsize=15,
                 bbox=dict(facecolor='yellow', alpha=0.5))
