@@ -46,7 +46,8 @@ model, criterion, postprocessors = build_model(args)
 model.to("cpu")
 model.eval()
 
-model.load_state_dict(torch.load("/Users/pranoyr/Desktop/detd_vrd_model.pth", map_location=torch.device('cpu')))
+# model.load_state_dict(torch.load("/Users/pranoyr/Desktop/detd_vrd_model.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("/Volumes/Pranoy/detd_vrd_model.pth", map_location=torch.device('cpu')))
 
 with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
 	CLASSES = json.load(f)
@@ -144,7 +145,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/couple-people-man-girl.jpg")
+im = Image.open("/Users/pranoyr/Desktop/vrd_sample/dog_walk.jpg")
 img = np.array(im)
 draw = img.copy()
 draw_rlp = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
