@@ -1,80 +1,24 @@
+import torch.nn as nn
 import torch
 
-def _get_src_permutation_idx(indices):
-	# permute predictions following indices
-	batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
-	src_idx = torch.cat([src for (src, _) in indices])
-	return batch_idx, src_idx
+a = torch.Tensor(6 ,2, 300, 512)
+print(a.shape)
+sbj = a[:,:,::3]
+prd = a[:,:,1::3]
+obj = a[:,:, 2::3]
+print(obj.shape)
 
 
+# multihead_attn = nn.MultiheadAttention(256, 8)
 
-# indices = [(1,3), (2,2), (3,1)]
-# indices = [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
-# print(indices)
-# print(_get_src_permutation_idx(indices))
-
-
-# s = torch.Tensor(2,3)
-# print(s)
-# print(s[:,torch.tensor([1,1,1,1])])
-
-# import torch.nn as nn
-
-# class_embed = nn.Linear(10, 20)
-
-# x = torch.randn(4,3,10, 10)
-# print(class_embed(x).shape)
+# query = torch.Tensor(10,2,256)
+# key = torch.Tensor(10,2,256)
+# value = torch.Tensor(10,2,256)
 
 
-
-# CLASSES = [
-#     'N/A', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
-#     'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A',
-#     'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse',
-#     'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack',
-#     'umbrella', 'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis',
-#     'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove',
-#     'skateboard', 'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass',
-#     'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich',
-#     'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
-#     'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table', 'N/A',
-#     'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
-#     'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A',
-#     'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
-#     'toothbrush'
-# ]
-
-l = [torch.tensor(0.4), torch.tensor(0.3), torch.tensor(0.2), torch.tensor(0.1)]
-print(sum(l))
-
-target = {"boxes":[1,2,34]}
-if "boxes" in target:	
-	print("yes")
+# attn_output, attn_output_weights = multihead_attn(query, key, value)
 
 
-sbj_out_bbox = torch.tensor([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8], [0.5, 0.6, 0.7, 0.8], [2, 1, 4, 1]])
+# print(attn_output.shape)
 
-sbj_tgt_bbox = torch.tensor([[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8]])
-
-cost_bbox_sbj = torch.cdist(sbj_out_bbox, sbj_tgt_bbox, p=1)
-print(cost_bbox_sbj)
-
-
-# # gt
-# bird on ground   0.0 0.1
-# person on tree   0.8 0.3
-
-# #pred
-# bird on tree
-
-
-# bird on ground   
-
-
-# person on ground
-
-
-
-
-
-
+# create a tensor in pytorch

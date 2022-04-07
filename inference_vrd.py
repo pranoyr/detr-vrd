@@ -43,11 +43,11 @@ parser = argparse.ArgumentParser('DETR training and evaluation script', parents=
 args = parser.parse_args()
 
 model, criterion, postprocessors = build_model(args)
-model.to("cpu")
+model.to("cuda")
 model.eval()
 
 # model.load_state_dict(torch.load("/Users/pranoyr/Desktop/detd_vrd_model.pth", map_location=torch.device('cpu')))
-model.load_state_dict(torch.load("/Volumes/Pranoy/detd_vrd_model.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("/media/pranoy/Pranoy/detd_vrd_model.pth"))
 
 with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
 	CLASSES = json.load(f)
@@ -97,11 +97,12 @@ def set_text(draw, text, text_pos):
 def rescale_bboxes(out_bbox, size):
 	img_w, img_h = size
 	b = box_cxcywh_to_xyxy(out_bbox)
-	b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)
+	b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32).cuda()
 	return b
 
 """Let's put everything together in a `detect` function:"""
 
+@torch.no_grad()
 def detect(im, model, transform):
 	# mean-std normalize the input image (batch-size: 1)
 	img = transform(im).unsqueeze(0)
@@ -112,7 +113,7 @@ def detect(im, model, transform):
 	assert img.shape[-2] <= 1600 and img.shape[-1] <= 1600, 'demo model only supports images up to 1600 pixels on each side'
 
 	# propagate through the model
-	outputs = model(img)
+	outputs = model(img.cuda())
 
 	# keep only predictions with 0.7+ confidence
 	probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
@@ -145,7 +146,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/Users/pranoyr/Desktop/vrd_sample/dog_walk.jpg")
+im = Image.open("/home/pranoy/Downloads/soccer.jpg")
 img = np.array(im)
 draw = img.copy()
 draw_rlp = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)

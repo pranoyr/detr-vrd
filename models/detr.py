@@ -20,6 +20,7 @@ from .transformer import build_transformer
 
 class DETR(nn.Module):
     """ This is the DETR module that performs object detection """
+
     def __init__(self, backbone, transformer, num_classes, num_prd_classes, num_queries, aux_loss=False):
         """ Initializes the model.
         Parameters:
@@ -37,14 +38,14 @@ class DETR(nn.Module):
         # self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
         # self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
-        self.sbj_class_embed = nn.Linear(hidden_dim, num_classes + 1) 
+        self.sbj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
         self.obj_class_embed = nn.Linear(hidden_dim, num_classes + 1)
         self.pred_class_embed = nn.Linear(hidden_dim, num_prd_classes + 1)
 
         self.sbj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
         self.obj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
         self.pred_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
-        
+
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         self.backbone = backbone
@@ -71,24 +72,27 @@ class DETR(nn.Module):
 
         src, mask = features[-1].decompose()
         assert mask is not None
-        hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight, pos[-1])[0] # [batch_size x num_queries x hidden_dim]
-        
+        hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight,
+                              pos[-1])[0]  # [batch_size x num_queries x hidden_dim]
+
+        print(hs[:, ::3].shape)
+
         # class prediction
-        sbj_class = self.sbj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
-        obj_class = self.obj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
-        pred_class = self.pred_class_embed(hs)  # (2, 100 , 512) -> (2, 100, 70)
+        sbj_class = self.sbj_class_embed(hs[:, :, ::3])    # (2, 100 , 512) -> (2, 100, 101)
+        obj_class = self.obj_class_embed(hs[:, :, 1::3])    # (2, 100 , 512) -> (2, 100, 101)
+        pred_class = self.pred_class_embed(hs[:, :, 2::3])  # (2, 100 , 512) -> (2, 100, 70)
 
         # bbox prediction
-        sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
-        obj_bbox = self.obj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
-        pred_bbox = self.pred_bbox_embed(hs).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
+        sbj_bbox = self.sbj_bbox_embed(hs[:, :, ::3]).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        obj_bbox = self.obj_bbox_embed(hs[:, :, 1::3]).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        pred_bbox = self.pred_bbox_embed(hs[:, :, 2::3]).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
 
         # outputs_class = self.class_embed(hs)
         # print("###")
         # print(outputs_class.shape)
         # outputs_coord = self.bbox_embed(hs).sigmoid()
-        out = {'sbj_logits': sbj_class[-1], 'sbj_boxes': sbj_bbox[-1], 'obj_logits': obj_class[-1], \
-        'obj_boxes': obj_bbox[-1], 'prd_logits': pred_class[-1], 'prd_boxes': pred_bbox[-1]}
+        out = {'sbj_logits': sbj_class[-1], 'sbj_boxes': sbj_bbox[-1], 'obj_logits': obj_class[-1],
+               'obj_boxes': obj_bbox[-1], 'prd_logits': pred_class[-1], 'prd_boxes': pred_bbox[-1]}
         if self.aux_loss:
             # out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord)
             out['aux_outputs'] = self._set_aux_loss(sbj_class, sbj_bbox, obj_class, obj_bbox, pred_class, pred_bbox)
@@ -100,7 +104,7 @@ class DETR(nn.Module):
         # doesn't support dictionary with non-homogeneous values, such
         # as a dict having both a Tensor and a list.
         return [{'sbj_logits': a, 'sbj_boxes': b, 'obj_logits': c, 'obj_boxes': d, 'prd_logits': e, 'prd_boxes': f}
-                for a, b, c ,d, e ,f in zip(sbj_class[:-1], sbj_bbox[:-1], obj_class[:-1], obj_bbox[:-1], pred_class[:-1], pred_bbox[:-1])]
+                for a, b, c, d, e, f in zip(sbj_class[:-1], sbj_bbox[:-1], obj_class[:-1], obj_bbox[:-1], pred_class[:-1], pred_bbox[:-1])]
         # return [{'pred_logits': a, 'pred_boxes': b}
         #         for a, b in zip(outputs_class[:-1], outputs_coord[:-1])]
 
@@ -111,6 +115,7 @@ class SetCriterion(nn.Module):
         1) we compute hungarian assignment between ground truth boxes and the outputs of the model
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
+
     def __init__(self, num_classes, num_prd_classes, matcher, weight_dict, eos_coef, losses):
         """ Create the criterion.
         Parameters:
@@ -149,16 +154,18 @@ class SetCriterion(nn.Module):
             # target_classes = torch.full(src_logits.shape[:2], self.num_classes,
             #                         dtype=torch.int64, device=src_logits.device)
             # target_classes[idx] = target_classes_o
-            if prefix=="prd":
+            if prefix == "prd":
                 target_classes = torch.full(src_logits.shape[:2], self.num_prd_classes,
-                                    dtype=torch.int64, device=src_logits.device)
+                                            dtype=torch.int64, device=src_logits.device)
                 target_classes[idx] = target_classes_o
-                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(1, 2), target_classes, self.empty_weight_pred)
+                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(
+                    1, 2), target_classes, self.empty_weight_pred)
             else:
                 target_classes = torch.full(src_logits.shape[:2], self.num_classes,
-                                    dtype=torch.int64, device=src_logits.device)
+                                            dtype=torch.int64, device=src_logits.device)
                 target_classes[idx] = target_classes_o
-                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(1, 2), target_classes, self.empty_weight)
+                loss_ce = F.cross_entropy(outputs[f'{prefix}_logits'].transpose(
+                    1, 2), target_classes, self.empty_weight)
             total_loss_ce.append(loss_ce)
 
         total_loss_ce = sum(total_loss_ce)
@@ -214,7 +221,7 @@ class SetCriterion(nn.Module):
                 box_ops.box_cxcywh_to_xyxy(target_boxes)))
             loss_giou = loss_giou.sum() / num_boxes
             total_loss_giou.append(loss_giou)
-                
+
         losses['loss_giou'] = sum(total_loss_giou)
         return losses
 
@@ -384,7 +391,7 @@ def build(args):
         backbone,
         transformer,
         num_classes=num_classes,
-        num_prd_classes = num_prd_classes,
+        num_prd_classes=num_prd_classes,
         num_queries=args.num_queries,
         aux_loss=args.aux_loss,
     )

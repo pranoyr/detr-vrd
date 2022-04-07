@@ -43,7 +43,7 @@ model, criterion, postprocessors = build_model(args)
 model.to("cpu")
 model.eval()
 
-model.load_state_dict(torch.load("/Volumes/Pranoy/detd_vrd_model.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("/media/pranoy/Pranoy/detd_vrd_model.pth", map_location=torch.device('cpu')))
 
     # print(model)
 
