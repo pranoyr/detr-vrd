@@ -75,8 +75,6 @@ class DETR(nn.Module):
         hs = self.transformer(self.input_proj(src), mask, self.query_embed.weight,
                               pos[-1])[0]  # [batch_size x num_queries x hidden_dim]
 
-        print(hs[:, ::3].shape)
-
         # class prediction
         sbj_class = self.sbj_class_embed(hs[:, :, ::3])    # (2, 100 , 512) -> (2, 100, 101)
         obj_class = self.obj_class_embed(hs[:, :, 1::3])    # (2, 100 , 512) -> (2, 100, 101)
