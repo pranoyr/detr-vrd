@@ -3,7 +3,7 @@ import torch
 
 a = torch.Tensor(6 ,2, 300, 512)
 print(a.shape)
-sbj = a[:,:,::3]
+sbj = a[:,:,0::3]
 prd = a[:,:,1::3]
 obj = a[:,:, 2::3]
 print(obj.shape)
