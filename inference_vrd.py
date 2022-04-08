@@ -47,7 +47,7 @@ model.to("cuda")
 model.eval()
 
 # model.load_state_dict(torch.load("/Users/pranoyr/Desktop/detd_vrd_model.pth", map_location=torch.device('cpu')))
-model.load_state_dict(torch.load("/media/pranoy/Pranoy/detd_vrd_model.pth"))
+model.load_state_dict(torch.load("detd_vrd_model.pth", map_location=torch.device('cpu')))
 
 with open(os.path.join(args.vrd_path, 'json_dataset', 'objects.json'), 'r') as f:
 	CLASSES = json.load(f)
@@ -117,7 +117,7 @@ def detect(im, model, transform):
 
 	# keep only predictions with 0.7+ confidence
 	probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
-	keep = probas_prd.max(-1).values > 0.5
+	keep = probas_prd.max(-1).values > 0.1
 	bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
 
 
@@ -146,7 +146,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/home/pranoy/Downloads/soccer.jpg")
+im = Image.open("/home/pranoy/Downloads/photo-1592727995117-4cdc7ee6fcb4.jpeg")
 img = np.array(im)
 draw = img.copy()
 draw_rlp = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
