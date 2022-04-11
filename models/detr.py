@@ -78,6 +78,7 @@ class DETR(nn.Module):
 
         # class prediction
         sbj_class = self.sbj_class_embed(hs[:, :, ::3])    # (2, 100 , 512) -> (2, 100, 101)
+        print(sbj_class.shape)
         obj_class = self.obj_class_embed(hs[:, :, 1::3])    # (2, 100 , 512) -> (2, 100, 101)
         pred_class = self.pred_class_embed(hs[:, :, 2::3])  # (2, 100 , 512) -> (2, 100, 70)
 

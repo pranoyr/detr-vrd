@@ -56,7 +56,6 @@ class HungarianMatcher(nn.Module):
 
         # We flatten to compute the cost matrices in a batch
         sbj_out_prob = outputs["sbj_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
-        print(sbj_out_prob.shape)
         sbj_out_bbox = outputs["sbj_boxes"].flatten(0, 1)  # [batch_size * num_queries, 4]
 
         obj_out_prob = outputs["obj_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
