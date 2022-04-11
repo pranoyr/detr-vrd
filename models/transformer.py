@@ -54,7 +54,6 @@ class Transformer(nn.Module):
         mask = mask.flatten(1)
 
         query_embed = query_embed[:-1,:,:]
-        print(query_embed.shape)
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
         # print("memory.shape:", memory.shape)
