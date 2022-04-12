@@ -117,7 +117,7 @@ def detect(im, model, transform):
 
 	# keep only predictions with 0.7+ confidence
 	probas_prd = outputs['prd_logits'].softmax(-1)[0, :, :-1]
-	keep = probas_prd.max(-1).values > 0.1
+	keep = probas_prd.max(-1).values > 0.5
 	bboxes_scaled_prd = rescale_bboxes(outputs['prd_boxes'][0, keep], im.size)
 
 
@@ -146,7 +146,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/home/pranoy/Downloads/photo-1592727995117-4cdc7ee6fcb4.jpeg")
+im = Image.open("/home/pranoy/Desktop/vrd_sample/183144994_1e009b7fc6_b.jpg")
 img = np.array(im)
 draw = img.copy()
 draw_rlp = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
