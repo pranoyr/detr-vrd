@@ -223,7 +223,7 @@ class TransformerDecoderLayer(nn.Module):
                                key_padding_mask=key_padding_mask)[0]
             intra_embedd_list.append(intra_embedd)
         intra_embedd = torch.cat(intra_embedd_list, dim=0)
-        print(intra_embedd.shape)
+        return intra_embedd
             
 
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
