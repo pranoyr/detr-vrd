@@ -52,8 +52,8 @@ class VRDDataset(Dataset):
 		self._preds_to_ind = dict(zip(self.preds, range(len(self.preds))))
 		self.imgs_list = make_image_list(self.dataset_path, self.image_set)
 
-		print(self._class_to_ind)
-		print(self._preds_to_ind)
+		# print(self._class_to_ind)
+		# print(self._preds_to_ind)
 
 		normalize = T.Compose([
 			T.ToTensor(),
