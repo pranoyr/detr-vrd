@@ -196,6 +196,7 @@ class TransformerDecoderLayer(nn.Module):
                  activation="relu", normalize_before=False):
         super().__init__()
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.self_attn_intra = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward)
@@ -219,7 +220,7 @@ class TransformerDecoderLayer(nn.Module):
 
         intra_embedd_list = []
         for i in range(len(values_split)):
-            intra_embedd = self.self_attn(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
+            intra_embedd = self.self_attn_intra(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
                                key_padding_mask=key_padding_mask)[0]
             intra_embedd_list.append(intra_embedd)
         intra_embedd = torch.cat(intra_embedd_list, dim=0)
