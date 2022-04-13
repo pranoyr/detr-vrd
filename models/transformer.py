@@ -53,7 +53,7 @@ class Transformer(nn.Module):
         query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
         mask = mask.flatten(1)
 
-        query_embed = query_embed[:-1,:,:]
+        # query_embed = query_embed[:-1,:,:]
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
         # print("memory.shape:", memory.shape)
@@ -150,6 +150,11 @@ class TransformerEncoderLayer(nn.Module):
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
         return tensor if pos is None else tensor + pos
 
+    def intra_relationSA(q, k, value, attn_mask, key_padding_mask):
+        print(q.shape)
+            
+        
+
     def forward_post(self,
                      src,
                      src_mask: Optional[Tensor] = None,
@@ -222,6 +227,13 @@ class TransformerDecoderLayer(nn.Module):
                      pos: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
         q = k = self.with_pos_embed(tgt, query_pos) # k,q,v --> torch.Size([100, 2, 256])
+
+        tgt = self.intra_relationSA(q, k, value=tgt, attn_mask=tgt_mask,
+                              key_padding_mask=tgt_key_padding_mask)
+
+        q = k = self.with_pos_embed(tgt, query_pos) # k,q,v --> torch.Size([100, 2, 256])
+
+
         tgt2 = self.self_attn(q, k, value=tgt, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)[0]
         tgt = tgt + self.dropout1(tgt2)
