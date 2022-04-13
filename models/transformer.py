@@ -213,7 +213,10 @@ class TransformerDecoderLayer(nn.Module):
         self.normalize_before = normalize_before
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
-        print(q.shape)
+        print(value.shape)
+        values_split = torch.tensor_split(value, 3)
+        print(values_split[0].shape)
+        
             
 
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
