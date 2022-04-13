@@ -214,7 +214,7 @@ class TransformerDecoderLayer(nn.Module):
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
         print(value.shape)
-        values_split = torch.tensor_split(value, 3)
+        values_split = torch.tensor_split(value, 400)
         print(values_split[0].shape)
         
             
