@@ -86,14 +86,10 @@ class DETR(nn.Module):
         obj_bbox = self.obj_bbox_embed(hs[:, :, 1::3]).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
         pred_bbox = self.pred_bbox_embed(hs[:, :, 2::3]).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
 
-        # outputs_class = self.class_embed(hs)
-        # print("###")
-        # print(outputs_class.shape)
-        # outputs_coord = self.bbox_embed(hs).sigmoid()
+ 
         out = {'sbj_logits': sbj_class[-1], 'sbj_boxes': sbj_bbox[-1], 'obj_logits': obj_class[-1],
                'obj_boxes': obj_bbox[-1], 'prd_logits': pred_class[-1], 'prd_boxes': pred_bbox[-1]}
         if self.aux_loss:
-            # out['aux_outputs'] = self._set_aux_loss(outputs_class, outputs_coord)
             out['aux_outputs'] = self._set_aux_loss(sbj_class, sbj_bbox, obj_class, obj_bbox, pred_class, pred_bbox)
         return out
 
@@ -104,8 +100,7 @@ class DETR(nn.Module):
         # as a dict having both a Tensor and a list.
         return [{'sbj_logits': a, 'sbj_boxes': b, 'obj_logits': c, 'obj_boxes': d, 'prd_logits': e, 'prd_boxes': f}
                 for a, b, c, d, e, f in zip(sbj_class[:-1], sbj_bbox[:-1], obj_class[:-1], obj_bbox[:-1], pred_class[:-1], pred_bbox[:-1])]
-        # return [{'pred_logits': a, 'pred_boxes': b}
-        #         for a, b in zip(outputs_class[:-1], outputs_coord[:-1])]
+
 
 
 class SetCriterion(nn.Module):
