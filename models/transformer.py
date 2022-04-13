@@ -150,11 +150,7 @@ class TransformerEncoderLayer(nn.Module):
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
         return tensor if pos is None else tensor + pos
 
-    def intra_relationSA(q, k, value, attn_mask, key_padding_mask):
-        print(q.shape)
-            
-        
-
+   
     def forward_post(self,
                      src,
                      src_mask: Optional[Tensor] = None,
@@ -215,6 +211,10 @@ class TransformerDecoderLayer(nn.Module):
 
         self.activation = _get_activation_fn(activation)
         self.normalize_before = normalize_before
+    
+    def intra_relationSA(q, k, value, attn_mask, key_padding_mask):
+        print(q.shape)
+            
 
     def with_pos_embed(self, tensor, pos: Optional[Tensor]):
         return tensor if pos is None else tensor + pos
