@@ -146,7 +146,7 @@ To try DETRdemo model on your own image just change the URL below.
 """
 
 # url = 'http://images.cocodataset.org/val2017/000000039769.jpg'
-im = Image.open("/home/pranoy/Desktop/vrd_sample/183144994_1e009b7fc6_b.jpg")
+im = Image.open("/home/pranoy/Desktop/vrd_sample/38457647_011d630cc1_o.jpg")
 img = np.array(im)
 draw = img.copy()
 draw_rlp = cv2.cvtColor(draw, cv2.COLOR_RGB2BGR)
