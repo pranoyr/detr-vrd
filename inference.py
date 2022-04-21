@@ -265,4 +265,5 @@ def plot_results(pil_img, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_p
                 bbox=dict(facecolor='yellow', alpha=0.5))
     plt.axis('off')
     plt.show()
+    
 plot_results(im, scores_sbj, scores_prd, scores_obj, boxes_sbj, boxes_prd, boxes_obj)
