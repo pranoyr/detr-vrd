@@ -220,7 +220,7 @@ class TransformerDecoderLayer(nn.Module):
         # k_split = torch.tensor_split(k, 400) # [torch.Size([400, 2, 256]), ...]
 
 
-        keys = rearrange(k, 't b c -> ', 't (b p) c', p=3)
+        keys = rearrange(k, 't b c -> ', '400 (b p) c', p=3)
         print(keys.shape)
 
      
