@@ -54,7 +54,7 @@ class Transformer(nn.Module):
         query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
         mask = mask.flatten(1)
 
-        # query_embed = query_embed[:-1,:,:]
+        query_embed = query_embed[:-1,:,:]
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
         # print("memory.shape:", memory.shape)
@@ -215,34 +215,17 @@ class TransformerDecoderLayer(nn.Module):
         self.normalize_before = normalize_before
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
-        # values_split = torch.tensor_split(value, 400)
-        # q_split = torch.tensor_split(q, 400)
-        # k_split = torch.tensor_split(k, 400) # [torch.Size([400, 2, 256]), ...]
-
-
+      
         # keys = rearrange(k, 't b c -> 400 (b 3) c')
-        keys = k.view(400, -1, k.size(-1))
-        values = value.view(400, -1, value.size(-1))
-        queries = q.view(400, -1, q.size(-1))
+        keys = k.view(33, -1, k.size(-1))
+        values = value.view(33, -1, value.size(-1))
+        queries = q.view(33, -1, q.size(-1))
 
 
         intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
                              key_padding_mask=key_padding_mask)[0]
 
-        intra_embedd = intra_embedd.view(1200, -1, intra_embedd.size(-1))
-      
-
-     
-        # intra_embedd_list = []
-        # for i in range(len(values_split)):
-        #     intra_embedd = self.self_attn_intra(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
-        #                        key_padding_mask=key_padding_mask)[0]
-        #     intra_embedd_list.append(intra_embedd)
-        # intra_embedd = torch.cat(intra_embedd_list, dim=0)
-        
-
-
-
+        intra_embedd = intra_embedd.view(100, -1, intra_embedd.size(-1))
         return intra_embedd
             
 
