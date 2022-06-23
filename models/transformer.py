@@ -8,6 +8,7 @@ Copy-paste from torch.nn.Transformer with modifications:
     * decoder returns a stack of activations from all decoding layers
 """
 import copy
+from einops import rearrange
 from typing import Optional, List
 
 import torch
@@ -214,17 +215,22 @@ class TransformerDecoderLayer(nn.Module):
         self.normalize_before = normalize_before
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
-        values_split = torch.tensor_split(value, 400)
-        q_split = torch.tensor_split(q, 400)
-        k_split = torch.tensor_split(k, 400)
+        # values_split = torch.tensor_split(value, 400)
+        # q_split = torch.tensor_split(q, 400)
+        # k_split = torch.tensor_split(k, 400) # [torch.Size([400, 2, 256]), ...]
 
-        print(q.shape)
+
+        keys = rearrange(k, 't b c -> ', 't (b p) c', p=3)
+        print(keys.shape)
+
+     
         # intra_embedd_list = []
         # for i in range(len(values_split)):
         #     intra_embedd = self.self_attn_intra(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
         #                        key_padding_mask=key_padding_mask)[0]
         #     intra_embedd_list.append(intra_embedd)
         # intra_embedd = torch.cat(intra_embedd_list, dim=0)
+        
 
 
 
