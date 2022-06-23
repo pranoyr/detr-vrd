@@ -222,7 +222,15 @@ class TransformerDecoderLayer(nn.Module):
 
         # keys = rearrange(k, 't b c -> 400 (b 3) c')
         keys = k.view(400, -1, k.size(-1))
-        print(keys.shape)
+        values = value.view(400, -1, value.size(-1))
+        queries = q.view(400, -1, q.size(-1))
+
+
+        intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
+                             key_padding_mask=key_padding_mask)[0]
+
+        intra_embedd = intra_embedd.view(1200, -1, intra_embedd.size(-1))
+      
 
      
         # intra_embedd_list = []
