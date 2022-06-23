@@ -218,12 +218,16 @@ class TransformerDecoderLayer(nn.Module):
         q_split = torch.tensor_split(q, 400)
         k_split = torch.tensor_split(k, 400)
 
-        intra_embedd_list = []
-        for i in range(len(values_split)):
-            intra_embedd = self.self_attn_intra(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
-                               key_padding_mask=key_padding_mask)[0]
-            intra_embedd_list.append(intra_embedd)
-        intra_embedd = torch.cat(intra_embedd_list, dim=0)
+        print(q.shape)
+        # intra_embedd_list = []
+        # for i in range(len(values_split)):
+        #     intra_embedd = self.self_attn_intra(q_split[i], k_split[i], value=values_split[i], attn_mask=attn_mask,
+        #                        key_padding_mask=key_padding_mask)[0]
+        #     intra_embedd_list.append(intra_embedd)
+        # intra_embedd = torch.cat(intra_embedd_list, dim=0)
+
+
+
         return intra_embedd
             
 
