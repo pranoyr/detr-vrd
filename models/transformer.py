@@ -225,7 +225,7 @@ class TransformerDecoderLayer(nn.Module):
         intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
                              key_padding_mask=key_padding_mask)[0]
 
-        intra_embedd = intra_embedd.view(100, -1, intra_embedd.size(-1))
+        intra_embedd = intra_embedd.view(99, -1, intra_embedd.size(-1))
         return intra_embedd
             
 
