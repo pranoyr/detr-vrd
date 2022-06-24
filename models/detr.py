@@ -34,7 +34,7 @@ class DETR(nn.Module):
         super().__init__()
         self.num_queries = num_queries
         self.transformer = transformer
-        hidden_dim = transformer.d_model
+        hidden_dim = transformer.d_model * 3
         # self.class_embed = nn.Linear(hidden_dim, num_classes + 1)
         # self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
@@ -47,7 +47,7 @@ class DETR(nn.Module):
         self.pred_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
         # self.query_embed1 = nn.Embedding(num_queries, 3, hidden_dim)
-        self.query_embed = nn.Parameter(torch.randn(num_queries, 3, hidden_dim))
+        self.query_embed = nn.Parameter(torch.randn(num_queries, 3, 256))
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         self.backbone = backbone
         self.aux_loss = aux_loss
