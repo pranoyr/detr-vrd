@@ -215,12 +215,10 @@ class TransformerDecoderLayer(nn.Module):
         self.normalize_before = normalize_before
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
-      
-        # keys = rearrange(k, 't b c -> 400 (b 3) c')
-        keys = k.view(33, -1, k.size(-1))
-        values = value.view(33, -1, value.size(-1))
-        queries = q.view(33, -1, q.size(-1))
-
+ 
+        keys = k.view(3, -1, k.size(-1))
+        values = value.view(3, -1, value.size(-1))
+        queries = q.view(3, -1, q.size(-1))
 
         intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
                              key_padding_mask=key_padding_mask)[0]
