@@ -230,7 +230,7 @@ class TransformerDecoderLayer(nn.Module):
                              key_padding_mask=key_padding_mask)[0]
 
         print(intra_embedd.shape) # torch.Size([3, 200, 256])
-        intra_embedd = intra_embedd.permute(1, 0, 2).flatten(1).permute(1,0,2)
+        intra_embedd = intra_embedd.permute(1, 0, 2).flatten(1).permute(1,0)
 
         print(intra_embedd.shape)
 
