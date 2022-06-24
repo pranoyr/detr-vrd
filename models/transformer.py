@@ -221,11 +221,17 @@ class TransformerDecoderLayer(nn.Module):
         # values = value.view(3, -1, value.size(-1))
         # queries = q.view(3, -1, q.size(-1))
 
-        print(q.shape)
+        #print(q.shape) # torch.Size([100, 3, 2, 256])
+        queries = q.view(3, -1 ,q.size(-1))
+        keys = k.view(3, -1, k.size(-1))
+        values = value.view(3, -1, value.size(-1))
+
         intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
                              key_padding_mask=key_padding_mask)[0]
 
-        intra_embedd = intra_embedd.view(99, -1, intra_embedd.size(-1))
+        print(intra_embedd.shape)
+
+        intra_embedd = intra_embedd.view(100, -1, intra_embedd.size(-1))
         return intra_embedd
             
 
