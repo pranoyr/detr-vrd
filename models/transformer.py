@@ -221,7 +221,8 @@ class TransformerDecoderLayer(nn.Module):
         # values = value.view(3, -1, value.size(-1))
         # queries = q.view(3, -1, q.size(-1))
 
-        #print(q.shape) # torch.Size([100, 3, 2, 256])
+        print(q.shape) # torch.Size([100, 3, 2, 256])
+        
         queries = q.view(3, -1 ,q.size(-1))
         keys = k.view(3, -1, k.size(-1))
         values = value.view(3, -1, value.size(-1))
