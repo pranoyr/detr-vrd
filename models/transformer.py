@@ -237,7 +237,7 @@ class TransformerDecoderLayer(nn.Module):
 
         print(intra_embedd.shape) # torch.Size([3, 200, 256])
         intra_embedd = intra_embedd.permute(1, 0, 2).flatten(1)
-        intra_embedd = intra_embedd.view(3, -1, intra_embedd.shape[-1])
+        intra_embedd = intra_embedd.view(100, -1, intra_embedd.shape[-1])
 
         print(intra_embedd.shape)
 
