@@ -46,7 +46,8 @@ class DETR(nn.Module):
         self.obj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
         self.pred_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
-        self.query_embed1 = nn.Embedding(num_queries, 3, hidden_dim)
+        # self.query_embed1 = nn.Embedding(num_queries, 3, hidden_dim)
+        self.query_embed = nn.Parameter(torch.randn(num_queries, 3, hidden_dim))
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         self.backbone = backbone
         self.aux_loss = aux_loss
@@ -73,7 +74,7 @@ class DETR(nn.Module):
 
         src, mask = features[-1].decompose()
         assert mask is not None
-        hs = self.transformer(self.input_proj(src), mask, self.query_embed1.weight,
+        hs = self.transformer(self.input_proj(src), mask, self.query_embed,
                               pos[-1])[0]  # [batch_size x num_queries x hidden_dim]
 
         # class prediction

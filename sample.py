@@ -9,6 +9,10 @@ obj = a[:,:, 2::3]
 print(obj.shape)
 
 
+query_embed1 = nn.Parameter(torch.zeros(100, 3, 256))
+a = nn.Embedding(100, 256, 3)
+
+
 # multihead_attn = nn.MultiheadAttention(256, 8)
 
 # query = torch.Tensor(10,2,256)
