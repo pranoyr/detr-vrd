@@ -236,7 +236,8 @@ class TransformerDecoderLayer(nn.Module):
                              key_padding_mask=key_padding_mask)[0]
 
         print(intra_embedd.shape) # torch.Size([3, 200, 256])
-        intra_embedd = intra_embedd.permute(1, 0, 2).flatten(1).permute(1,0)
+        intra_embedd = intra_embedd.permute(1, 0, 2).flatten(1)
+        intra_embedd = intra_embedd.view(3, -1, intra_embedd.shape[-1])
 
         print(intra_embedd.shape)
 
@@ -254,8 +255,7 @@ class TransformerDecoderLayer(nn.Module):
                      memory_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
-        print("***")
-        print(query_pos.shape)
+                     
         q = k = self.with_pos_embed(tgt, query_pos) # k,q,v --> torch.Size([100, 2, 256])
 
         tgt = self.intra_relationSA(q, k, value=tgt, attn_mask=tgt_mask,
