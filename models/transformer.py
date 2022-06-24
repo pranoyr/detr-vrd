@@ -254,6 +254,7 @@ class TransformerDecoderLayer(nn.Module):
                      memory_key_padding_mask: Optional[Tensor] = None,
                      pos: Optional[Tensor] = None,
                      query_pos: Optional[Tensor] = None):
+        print(query_pos.shape)
         q = k = self.with_pos_embed(tgt, query_pos) # k,q,v --> torch.Size([100, 2, 256])
 
         tgt = self.intra_relationSA(q, k, value=tgt, attn_mask=tgt_mask,
