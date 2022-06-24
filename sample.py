@@ -9,9 +9,16 @@ obj = a[:,:, 2::3]
 print(obj.shape)
 
 
-query_embed1 = nn.Parameter(torch.zeros(100, 3, 256))
-a = nn.Embedding(100, 256, 3)
+query_embed = nn.Parameter(torch.zeros(100, 3, 256))
+# a = nn.Embedding(100, 256, 3)
 
+
+  #100, 256   100, 2, 256
+
+
+bs = 2
+query_embed = query_embed.unsqueeze(2).repeat(1, 1, bs, 1)
+print(query_embed.shape)
 
 # multihead_attn = nn.MultiheadAttention(256, 8)
 
