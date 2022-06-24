@@ -54,7 +54,7 @@ class Transformer(nn.Module):
         query_embed = query_embed.unsqueeze(1).repeat(1, bs, 1)
         mask = mask.flatten(1)
 
-        query_embed = query_embed[:-1,:,:]
+        # query_embed = query_embed[:-1,:,:]
         tgt = torch.zeros_like(query_embed)
         memory = self.encoder(src, src_key_padding_mask=mask, pos=pos_embed)
         # print("memory.shape:", memory.shape)
@@ -216,10 +216,11 @@ class TransformerDecoderLayer(nn.Module):
     
     def intra_relationSA(self, q, k, value, attn_mask, key_padding_mask):
  
-        keys = k.view(3, -1, k.size(-1))
-        values = value.view(3, -1, value.size(-1))
-        queries = q.view(3, -1, q.size(-1))
+        # keys = k.view(3, -1, k.size(-1))
+        # values = value.view(3, -1, value.size(-1))
+        # queries = q.view(3, -1, q.size(-1))
 
+        print(q.shape)
         intra_embedd = self.self_attn_intra(queries, keys, value=values, attn_mask=attn_mask,
                              key_padding_mask=key_padding_mask)[0]
 

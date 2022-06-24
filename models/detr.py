@@ -46,7 +46,7 @@ class DETR(nn.Module):
         self.obj_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
         self.pred_bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
 
-        self.query_embed1 = nn.Embedding(num_queries, hidden_dim)
+        self.query_embed1 = nn.Embedding(num_queries, 3, hidden_dim)
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         self.backbone = backbone
         self.aux_loss = aux_loss
@@ -77,14 +77,14 @@ class DETR(nn.Module):
                               pos[-1])[0]  # [batch_size x num_queries x hidden_dim]
 
         # class prediction
-        sbj_class = self.sbj_class_embed(hs[:, :, ::3])    # (2, 100 , 512) -> (2, 100, 101)
-        obj_class = self.obj_class_embed(hs[:, :, 1::3])    # (2, 100 , 512) -> (2, 100, 101)
-        pred_class = self.pred_class_embed(hs[:, :, 2::3])  # (2, 100 , 512) -> (2, 100, 70)
+        sbj_class = self.sbj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
+        obj_class = self.obj_class_embed(hs)    # (2, 100 , 512) -> (2, 100, 101)
+        pred_class = self.pred_class_embed(hs)  # (2, 100 , 512) -> (2, 100, 70)
 
         # bbox prediction
-        sbj_bbox = self.sbj_bbox_embed(hs[:, :, ::3]).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
-        obj_bbox = self.obj_bbox_embed(hs[:, :, 1::3]).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
-        pred_bbox = self.pred_bbox_embed(hs[:, :, 2::3]).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
+        sbj_bbox = self.sbj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        obj_bbox = self.obj_bbox_embed(hs).sigmoid()    # (2, 100 , 512) -> (2, 100, 4)
+        pred_bbox = self.pred_bbox_embed(hs).sigmoid()  # (2, 100 , 512) -> (2, 100, 4)
 
  
         out = {'sbj_logits': sbj_class[-1], 'sbj_boxes': sbj_bbox[-1], 'obj_logits': obj_class[-1],
